@@ -12,8 +12,22 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': {
+      // Java后端服务
+      '/api/v1': {
         target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      // Python股票服务
+      '/api/market': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/api/stock': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/api/sector': {
+        target: 'http://localhost:8000',
         changeOrigin: true
       }
     }
