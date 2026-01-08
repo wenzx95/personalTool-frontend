@@ -190,6 +190,21 @@
         <span class="progress-text">正在采集市场数据，请稍候...</span>
       </el-progress>
 
+      <!-- 实时日志显示 -->
+      <el-collapse v-if="logMessages.length > 0" style="margin-bottom: 24px;">
+        <el-collapse-item title="实时日志" name="1">
+          <div class="log-container">
+            <div
+              v-for="(log, index) in logMessages"
+              :key="index"
+              class="log-item"
+            >
+              {{ log }}
+            </div>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+
       <el-scrollbar max-height="60vh">
         <el-form :model="createForm" label-width="120px" label-position="right">
           <el-divider content-position="left">
@@ -627,6 +642,46 @@ const collectProgress = ref(0)
 const reviewList = ref<MarketReviewData[]>([])
 const collectedData = ref<MarketReviewData | null>(null)
 
+// SSE 实时日志
+const logMessages = ref<string[]>([])
+let eventSource: EventSource | null = null
+let currentSessionId: string | null = null
+
+// 生成唯一会话ID
+const generateSessionId = (): string => {
+  return Date.now().toString() + Math.random().toString(36).substring(2, 9)
+}
+
+// 连接 SSE
+const connectSSE = (sessionId: string) => {
+  logMessages.value = []
+  const url = `${import.meta.env.VITE_API_BASE_URL}/api/sse/events/${sessionId}`
+  eventSource = new EventSource(url)
+
+  eventSource.onmessage = (event) => {
+    logMessages.value.push(event.data)
+  }
+
+  eventSource.onerror = (error) => {
+    console.error('SSE 连接错误:', error)
+    if (eventSource?.readyState === EventSource.CLOSED) {
+      console.log('SSE 连接已关闭')
+    }
+  }
+
+  eventSource.onopen = () => {
+    console.log('SSE 连接已建立')
+  }
+}
+
+// 关闭 SSE 连接
+const closeSSE = () => {
+  if (eventSource) {
+    eventSource.close()
+    eventSource = null
+  }
+}
+
 // 最新复盘记录
 const latestReview = computed(() => {
   return reviewList.value.length > 0 ? reviewList.value[0] : null
@@ -652,6 +707,12 @@ const createForm = ref<MarketReviewData & CreateReviewRequest>({
   continuous_limit_rate: 0,
   four_plus_count: 0,
   four_plus_stocks: [],
+  red_rate: 0,
+  market_strength: '',
+  max_continuous_days: 0,
+  first_board_count: 0,
+  three_board_stocks_with_sector: [],
+  four_plus_stocks_with_sector: [],
   two_board_count: 0,
   three_board_count: 0,
   three_board_stocks: [],
@@ -709,7 +770,7 @@ const getZtRateClass = (rate: number) => {
 }
 
 // 获取成交额单元格样式类
-const getVolumeCellClass = (row: MarketReviewData, index: number) => {
+const getVolumeCellClass = (_row: MarketReviewData, index: number) => {
   const list = filteredReviewList.value
   console.log('getVolumeCellClass called, index:', index, 'list length:', list.length)
 
@@ -732,7 +793,7 @@ const getVolumeCellClass = (row: MarketReviewData, index: number) => {
 }
 
 // 获取市场强弱样式类
-const getMarketStrengthClass = (strength: string) => {
+const getMarketStrengthClass = (strength: string | undefined) => {
   const classMap: Record<string, string> = {
     '极强': 'text-red font-bold',
     '强': 'text-red',
@@ -741,11 +802,14 @@ const getMarketStrengthClass = (strength: string) => {
     '偏弱': 'text-green',
     '弱': 'text-green'
   }
+  if (!strength) {
+    return ''
+  }
   return classMap[strength] || ''
 }
 
 // 获取市场强弱Tag类型
-const getMarketStrengthTagType = (strength: string) => {
+const getMarketStrengthTagType = (strength: string | undefined) => {
   const typeMap: Record<string, string> = {
     '极强': 'danger',
     '强': 'danger',
@@ -753,6 +817,9 @@ const getMarketStrengthTagType = (strength: string) => {
     '中性': 'info',
     '偏弱': 'success',
     '弱': 'success'
+  }
+  if (!strength) {
+    return 'info'
   }
   return typeMap[strength] || 'info'
 }
@@ -776,20 +843,6 @@ const fetchReviewList = async () => {
 }
 
 // 触发数据采集
-const handleCollectData = async () => {
-  collectLoading.value = true
-  try {
-    ElMessage.info('正在采集实时市场数据，请稍候...')
-    const data = await getMarketReview()
-    ElMessage.success('数据采集成功！')
-    // 重新获取列表
-    await fetchReviewList()
-  } catch (error: any) {
-    ElMessage.error(error.message || '数据采集失败')
-  } finally {
-    collectLoading.value = false
-  }
-}
 
 // 在创建对话框中触发数据采集
 const handleCollectForCreate = async () => {
@@ -800,6 +853,11 @@ const handleCollectForCreate = async () => {
 
   collectLoading.value = true
   collectProgress.value = 0
+  logMessages.value = []
+
+  // 生成会话ID并连接SSE
+  currentSessionId = generateSessionId()
+  connectSSE(currentSessionId)
 
   try {
     ElMessage.info('正在采集实时市场数据，请稍候...')
@@ -846,6 +904,7 @@ const handleCollectForCreate = async () => {
   } finally {
     collectLoading.value = false
     collectProgress.value = 0
+    closeSSE()
   }
 }
 
@@ -857,6 +916,12 @@ const handleCreate = async () => {
   }
 
   submitLoading.value = true
+  logMessages.value = []
+
+  // 生成会话ID并连接SSE
+  currentSessionId = generateSessionId()
+  connectSSE(currentSessionId)
+
   try {
     // 只发送后端需要的字段
     const createData: CreateReviewRequest = {
@@ -865,7 +930,7 @@ const handleCreate = async () => {
       notes: createForm.value.notes
     }
 
-    await createReview(createData)
+    await createReview(createData, currentSessionId)
     ElMessage.success('复盘记录创建成功')
     showCreateDialog.value = false
     resetCreateForm()
@@ -874,6 +939,7 @@ const handleCreate = async () => {
     ElMessage.error(error.message || '创建失败')
   } finally {
     submitLoading.value = false
+    closeSSE()
   }
 }
 
@@ -897,7 +963,13 @@ const resetCreateForm = () => {
     three_board_stocks: [],
     total_stocks: 0,
     hot_sectors: [],
-    notes: ''
+    notes: '',
+    red_rate: 0,
+    market_strength: '',
+    max_continuous_days: 0,
+    first_board_count: 0,
+    three_board_stocks_with_sector: [],
+    four_plus_stocks_with_sector: []
   }
   collectedData.value = null
 }
@@ -1053,10 +1125,14 @@ onMounted(() => {
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   padding: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch; /* 启用iOS/Mac平滑滚动 */
 }
 
 .data-table {
   width: 100%;
+  /* 确保触控板滚动正常工作 */
+  touch-action: pan-y;
 
   /* 成交额单元格背景色 - 应用到 span 元素 */
   :deep(.volume-up-cell) {
@@ -1085,6 +1161,13 @@ onMounted(() => {
       font-size: 13px;
       border-bottom: 2px solid #e8e8e8;
     }
+  }
+
+  :deep(.el-table__body-wrapper) {
+    /* 确保表格主体可以滚动 */
+    overflow-y: auto !important;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
   :deep(.el-table__body) {
@@ -1205,8 +1288,27 @@ onMounted(() => {
   font-weight: 500;
 }
 
+/* 实时日志样式 */
+.log-container {
+  max-height: 300px;
+  overflow-y: auto;
+  background: #1e1e1e;
+  border-radius: 4px;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.log-item {
+  color: #d4d4d4;
+  margin-bottom: 4px;
+  padding: 2px 0;
+}
+
+/* 移除阻止滚动的规则，允许Mac触控板正常滚动 */
 :deep(.el-scrollbar__wrap) {
-  overflow-x: hidden;
+  /* overflow-x: hidden;  <-- 这行会阻止Mac触控板滚动，已移除 */
 }
 
 :deep(.el-divider) {

@@ -12,23 +12,12 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // Java后端服务
-      '/api/v1': {
+      // 所有API请求都转发到Spring Boot后端
+      // 后端会根据需要调用Python服务
+      '/api': {
         target: 'http://localhost:8080',
-        changeOrigin: true
-      },
-      // Python股票服务
-      '/api/market': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      },
-      '/api/stock': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      },
-      '/api/sector': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
+        changeOrigin: true,
+        rewrite: (path) => path
       }
     }
   },

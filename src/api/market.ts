@@ -86,18 +86,25 @@ export interface UpdateReviewRequest {
 }
 
 // 获取实时市场数据（不保存）
-export const getMarketReview = (tradeDate?: string): Promise<MarketReviewData> => {
+export const getMarketReview = (tradeDate?: string, sessionId?: string): Promise<MarketReviewData> => {
+  const params: any = {}
+  if (tradeDate) {
+    params.tradeDate = tradeDate
+  }
+  if (sessionId) {
+    params.sessionId = sessionId
+  }
   return marketRequest({
-    url: '/market/review',
+    url: '/v1/market/review',
     method: 'GET',
-    params: { trade_date: tradeDate }
+    params
   })
 }
 
 // 获取复盘记录列表
 export const getReviewList = (limit = 100, offset = 0): Promise<MarketReviewData[]> => {
   return marketRequest({
-    url: '/market/review/list',
+    url: '/v1/market/review/list',
     method: 'GET',
     params: { limit, offset }
   })
@@ -106,16 +113,18 @@ export const getReviewList = (limit = 100, offset = 0): Promise<MarketReviewData
 // 获取指定日期的复盘记录
 export const getReviewDetail = (date: string): Promise<MarketReviewData> => {
   return marketRequest({
-    url: `/market/review/detail/${date}`,
+    url: `/v1/market/review/detail/${date}`,
     method: 'GET'
   })
 }
 
 // 创建复盘记录
-export const createReview = (data: CreateReviewRequest): Promise<MarketReviewData> => {
+export const createReview = (data: CreateReviewRequest, sessionId?: string): Promise<MarketReviewData> => {
+  const params = sessionId ? { sessionId } : {}
   return marketRequest({
-    url: '/market/review/create',
+    url: '/v1/market/review/create',
     method: 'POST',
+    params,
     data
   })
 }
@@ -123,7 +132,7 @@ export const createReview = (data: CreateReviewRequest): Promise<MarketReviewDat
 // 更新复盘记录
 export const updateReview = (reviewId: number, data: UpdateReviewRequest): Promise<MarketReviewData> => {
   return marketRequest({
-    url: `/market/review/update/${reviewId}`,
+    url: `/v1/market/review/update/${reviewId}`,
     method: 'PUT',
     data
   })
@@ -132,7 +141,7 @@ export const updateReview = (reviewId: number, data: UpdateReviewRequest): Promi
 // 删除复盘记录
 export const deleteReview = (reviewId: number): Promise<void> => {
   return marketRequest({
-    url: `/market/review/delete/${reviewId}`,
+    url: `/v1/market/review/delete/${reviewId}`,
     method: 'DELETE'
   })
 }
