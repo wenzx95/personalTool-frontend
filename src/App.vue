@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 // Main app component - router view is handled by layouts
+// Authentication is handled by router guards
 </script>
 
 <style>

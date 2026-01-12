@@ -11,6 +11,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: '0.0.0.0',
     proxy: {
       // 所有API请求都转发到Spring Boot后端
       // 后端会根据需要调用Python服务

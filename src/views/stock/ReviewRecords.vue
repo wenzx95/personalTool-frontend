@@ -323,7 +323,6 @@ const dateRange = ref<[string, string] | null>(null)
 
 // 分页状态
 const pageSize = 30
-const currentPage = ref(1)
 const displayedCount = ref(pageSize)
 
 const showEditDialog = ref(false)

@@ -106,8 +106,6 @@ import {
   Calendar,
   DataLine,
   Timer,
-  Tag,
-  Scale,
   Wallet
 } from '@element-plus/icons-vue'
 
@@ -251,7 +249,7 @@ const comingSoonTools = ref<Tool[]>([
     id: 'price-compare',
     title: '价格比较',
     description: '商品价格历史和比价工具',
-    icon: Tag,
+    icon: DocumentCopy,
     category: 'calculator',
     route: '/tools/price-compare',
     status: 'beta',

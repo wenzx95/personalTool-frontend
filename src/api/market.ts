@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 // 创建专门的市场API请求实例
 const marketRequest = axios.create({
@@ -7,9 +8,14 @@ const marketRequest = axios.create({
   timeout: 120000 // 市场数据采集需要较长时间，设置为2分钟
 })
 
-// 请求拦截器 - 添加日志
+// 请求拦截器 - 添加日志和 token
 marketRequest.interceptors.request.use(
   (config) => {
+    // Add token if exists
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     console.log('[API Request]', config.method?.toUpperCase(), config.url, config.params || config.data)
     return config
   },
@@ -19,7 +25,7 @@ marketRequest.interceptors.request.use(
   }
 )
 
-// 响应拦截器 - 添加日志
+// 响应拦截器 - 添加日志和错误处理
 marketRequest.interceptors.response.use(
   (response) => {
     console.log('[API Response]', response.config.url, 'status:', response.status, 'data:', response.data)
@@ -34,6 +40,30 @@ marketRequest.interceptors.response.use(
   },
   (error) => {
     console.error('[API Network Error]', error.config?.url, error.message, error)
+
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+      // Clear token and user data
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      // Redirect to login (avoid redirecting from login page or tools pages)
+      const currentPath = router.currentRoute.value.path
+      if (currentPath !== '/login' && !currentPath.startsWith('/tools')) {
+        router.push({
+          path: '/login',
+          query: { redirect: currentPath }
+        })
+      }
+      return Promise.reject(error)
+    }
+
+    // Handle 500 errors
+    if (error.response?.status === 500) {
+      ElMessage.error('服务器错误，请稍后重试')
+      return Promise.reject(error)
+    }
+
     if (error.code === 'ECONNABORTED') {
       ElMessage.error('请求超时，请稍后重试')
     } else {

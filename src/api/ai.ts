@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 // AI API请求实例
 const aiRequest = axios.create({
@@ -10,6 +11,11 @@ const aiRequest = axios.create({
 // 请求拦截器
 aiRequest.interceptors.request.use(
   (config) => {
+    // Add token if exists
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     console.log('[AI API Request]', config.method?.toUpperCase(), config.url)
     return config
   },
@@ -34,6 +40,28 @@ aiRequest.interceptors.response.use(
   },
   (error) => {
     console.error('[AI API Network Error]', error.config?.url, error.message)
+
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      const currentPath = router.currentRoute.value.path
+      if (currentPath !== '/login' && !currentPath.startsWith('/tools')) {
+        router.push({
+          path: '/login',
+          query: { redirect: currentPath }
+        })
+      }
+      return Promise.reject(error)
+    }
+
+    // Handle 500 errors
+    if (error.response?.status === 500) {
+      ElMessage.error('服务器错误，请稍后重试')
+      return Promise.reject(error)
+    }
+
     ElMessage.error(error.message || '网络错误')
     return Promise.reject(error)
   }

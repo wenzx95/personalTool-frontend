@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 // 创建配置管理API请求实例
 const configRequest = axios.create({
@@ -10,6 +11,11 @@ const configRequest = axios.create({
 // 请求拦截器
 configRequest.interceptors.request.use(
   (config) => {
+    // Add token if exists
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     console.log('[Config API Request]', config.method?.toUpperCase(), config.url, config.params || config.data)
     return config
   },
@@ -34,6 +40,28 @@ configRequest.interceptors.response.use(
   },
   (error) => {
     console.error('[Config API Network Error]', error.config?.url, error.message, error)
+
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      const currentPath = router.currentRoute.value.path
+      if (currentPath !== '/login' && !currentPath.startsWith('/tools')) {
+        router.push({
+          path: '/login',
+          query: { redirect: currentPath }
+        })
+      }
+      return Promise.reject(error)
+    }
+
+    // Handle 500 errors
+    if (error.response?.status === 500) {
+      ElMessage.error('服务器错误，请稍后重试')
+      return Promise.reject(error)
+    }
+
     if (error.code === 'ECONNABORTED') {
       ElMessage.error('请求超时，请稍后重试')
     } else {

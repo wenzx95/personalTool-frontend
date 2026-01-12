@@ -13,11 +13,11 @@
       <el-button-group>
         <el-button type="primary" @click="formatJson" :loading="processing">
           <el-icon><Document /></el-icon>
-          格式化
+          {{ processing ? (processingDetail || '处理中...') : '格式化' }}
         </el-button>
         <el-button @click="deepFormatJson" :loading="processing">
           <el-icon><MagicStick /></el-icon>
-          深度格式化
+          {{ processing ? (processingDetail || '处理中...') : '深度格式化' }}
         </el-button>
         <el-button @click="compressJson" :loading="processing">
           <el-icon><FolderOpened /></el-icon>
@@ -132,7 +132,7 @@
             v-model="inputJson"
             type="textarea"
             placeholder="在此粘贴或输入 JSON 字符串...&#10;支持非标准格式，如：{1:'hellop'} 或 {name:'test',}"
-            @input="validateJson"
+            @input="debouncedValidate"
           />
         </div>
         <div v-if="errorMessage" class="error-message">
@@ -160,12 +160,18 @@
               @update-key="updateKey"
               @delete-node="deleteNode"
               @add-item="addItem"
+              @copy-node="copyNode"
             />
           </div>
 
           <!-- Code View -->
           <div v-else class="panel-body output-body">
-            <pre v-html="highlightedOutput"></pre>
+            <div v-if="highlightedOutput.truncated" class="truncated-notice">
+              <el-icon><Warning /></el-icon>
+              内容过长，只显示前 {{ MAX_CODE_VIEW_LINES }} 行（共 {{ highlightedOutput.remaining + MAX_CODE_VIEW_LINES }} 行）
+              <el-button link @click="viewMode = 'tree'">切换到树视图</el-button>
+            </div>
+            <pre v-html="highlightedOutput.html"></pre>
           </div>
         </div>
       </template>
@@ -202,7 +208,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document,
@@ -221,8 +227,20 @@ import {
 } from '@element-plus/icons-vue'
 import JsonTreeNode from '@/components/JsonTreeNode.vue'
 
+// ========== Utilities ==========
+// 防抖函数实现
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  return ((...args: any[]) => {
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }) as T
+}
+
 // ========== Constants ==========
 const STORAGE_KEY = 'json-cases'
+const MAX_CODE_VIEW_LINES = 1000  // 代码视图最多显示 1000 行
+const MAX_EXPAND_NODES = 500  // 全展开操作最大节点数警告阈值
 
 // ========== Types ==========
 interface SavedCase {
@@ -240,6 +258,7 @@ const outputJson = ref('')
 const errorMessage = ref('')
 const isValid = ref(false)
 const processing = ref(false)
+const processingDetail = ref('')
 const indentSpaces = ref(2)
 const sortKeys = ref(false)
 const viewMode = ref<ViewMode>('tree')
@@ -264,29 +283,56 @@ const parseInput = (input: string): any => {
   }
 }
 
-// 添加所有路径到展开集合
-const addAllPathsToSet = (obj: any, path: string[] = [], set: Set<string> = new Set()): Set<string> => {
+// 添加所有路径到展开集合（支持深度限制）
+const addAllPathsToSet = (
+  obj: any,
+  path: string[] = [],
+  set: Set<string> = new Set(),
+  maxDepth: number = 2  // 默认只展开 2 层
+): Set<string> => {
   const key = path.length > 0 ? path.join('-') : 'root'
 
-  if (path.length === 0 || (typeof obj === 'object' && obj !== null)) {
+  // 只展开到指定深度
+  if (path.length < maxDepth && (path.length === 0 || (typeof obj === 'object' && obj !== null))) {
     set.add(key)
   }
+
+  // 达到深度限制，停止递归
+  if (path.length >= maxDepth) return set
 
   if (Array.isArray(obj)) {
     obj.forEach((item, index) => {
       if (typeof item === 'object' && item !== null) {
-        addAllPathsToSet(item, [...path, index.toString()], set)
+        addAllPathsToSet(item, [...path, index.toString()], set, maxDepth)
       }
     })
   } else if (obj !== null && typeof obj === 'object') {
     Object.keys(obj).forEach(key => {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
-        addAllPathsToSet(obj[key], [...path, key], set)
+        addAllPathsToSet(obj[key], [...path, key], set, maxDepth)
       }
     })
   }
 
   return set
+}
+
+// 计算对象中的所有节点数量
+const countNodes = (obj: any): number => {
+  let count = 0
+
+  const traverse = (item: any) => {
+    count++
+
+    if (Array.isArray(item)) {
+      item.forEach(traverse)
+    } else if (item !== null && typeof item === 'object') {
+      Object.values(item).forEach(traverse)
+    }
+  }
+
+  traverse(obj)
+  return count
 }
 
 // 深拷贝对象
@@ -413,6 +459,21 @@ const validateJson = () => {
   }
 }
 
+// 防抖的验证函数（300ms 延迟）
+const debouncedValidate = debounce(() => {
+  validateJson()
+}, 300)
+
+// 按需更新输入框（防抖 500ms）
+const updateInputJson = debounce(() => {
+  if (parsedData.value) {
+    // 使用 requestAnimationFrame 避免阻塞 UI
+    requestAnimationFrame(() => {
+      inputJson.value = JSON.stringify(parsedData.value, null, indentSpaces.value)
+    })
+  }
+}, 500)
+
 const formatJson = async () => {
   if (!inputJson.value.trim()) {
     ElMessage.warning('请输入要格式化的内容')
@@ -420,8 +481,18 @@ const formatJson = async () => {
   }
 
   processing.value = true
+  processingDetail.value = '正在解析...'
   try {
+    // 让 UI 更新
+    await nextTick()
+
+    // 使用 setTimeout 避免 UI 阻塞
+    await new Promise(resolve => setTimeout(resolve, 0))
+
     let parsed = parseInput(inputJson.value)
+
+    processingDetail.value = '正在格式化...'
+    await nextTick()
 
     if (sortKeys.value) {
       parsed = sortObjectKeys(parsed)
@@ -429,13 +500,14 @@ const formatJson = async () => {
 
     parsedData.value = parsed
     viewMode.value = 'tree'
-    expandedNodes.value = addAllPathsToSet(parsed)
+    expandedNodes.value = addAllPathsToSet(parsed, [], new Set(), 2)  // 只展开 2 层
 
     ElMessage.success('格式化成功')
   } catch (error: any) {
     ElMessage.error('格式化失败: ' + error.message)
   } finally {
     processing.value = false
+    processingDetail.value = ''
   }
 }
 
@@ -466,8 +538,18 @@ const deepFormatJson = async () => {
   }
 
   processing.value = true
+  processingDetail.value = '正在解析...'
   try {
+    await nextTick()
+
+    // 使用 setTimeout 避免 UI 阻塞
+    await new Promise(resolve => setTimeout(resolve, 0))
+
     let parsed = parseInput(inputJson.value)
+
+    processingDetail.value = '正在深度格式化...'
+    await nextTick()
+
     parsed = deepFormat(parsed)
 
     if (sortKeys.value) {
@@ -476,13 +558,14 @@ const deepFormatJson = async () => {
 
     parsedData.value = parsed
     viewMode.value = 'tree'
-    expandedNodes.value = addAllPathsToSet(parsed)
+    expandedNodes.value = addAllPathsToSet(parsed, [], new Set(), 2)  // 只展开 2 层
 
     ElMessage.success('深度格式化成功')
   } catch (error: any) {
     ElMessage.error('深度格式化失败: ' + error.message)
   } finally {
     processing.value = false
+    processingDetail.value = ''
   }
 }
 
@@ -543,6 +626,19 @@ const applySort = () => {
 }
 
 // ========== Display ==========
+// JSON 语法高亮函数
+const highlightJson = (json: string): string => {
+  let html = json
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/("(?:[^"\\]|\\.)*")/g, '<span class="json-string">$1</span>')
+    .replace(/\b(-?\d+\.?\d*(?:[eE][+-]?\d+)?)\b/g, '<span class="json-number">$1</span>')
+    .replace(/\b(true|false|null|undefined)\b/g, '<span class="json-boolean">$1</span>')
+    .replace(/<span class="json-string">"([^"]+)"<\/span>(\s*:)/g, '<span class="json-key">"$1"</span>$2')
+  return html
+}
+
 const getStats = () => {
   if (!parsedData.value) return ''
 
@@ -564,18 +660,27 @@ const getStats = () => {
 }
 
 const highlightedOutput = computed(() => {
-  if (!parsedData.value) return ''
+  if (!parsedData.value) return { html: '', truncated: false, remaining: 0 }
 
   const json = JSON.stringify(parsedData.value, null, indentSpaces.value)
-  let html = json
+  const lines = json.split('\n')
 
-  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  html = html.replace(/("(?:[^"\\]|\\.)*")/g, '<span class="json-string">$1</span>')
-  html = html.replace(/\b(-?\d+\.?\d*(?:[eE][+-]?\d+)?)\b/g, '<span class="json-number">$1</span>')
-  html = html.replace(/\b(true|false|null|undefined)\b/g, '<span class="json-boolean">$1</span>')
-  html = html.replace(/<span class="json-string">"([^"]+)"<\/span>(\s*:)/g, '<span class="json-key">"$1"</span>$2')
+  // 如果超过最大行数，截断并显示提示
+  if (lines.length > MAX_CODE_VIEW_LINES) {
+    const truncated = lines.slice(0, MAX_CODE_VIEW_LINES).join('\n')
+    const remaining = lines.length - MAX_CODE_VIEW_LINES
+    return {
+      html: highlightJson(truncated),
+      truncated: true,
+      remaining
+    }
+  }
 
-  return html
+  return {
+    html: highlightJson(json),
+    truncated: false,
+    remaining: 0
+  }
 })
 
 // ========== Tree Operations ==========
@@ -588,8 +693,34 @@ const toggleExpand = (path: string[]) => {
   }
 }
 
-const expandAll = () => {
-  expandedNodes.value = addAllPathsToSet(parsedData.value)
+const expandAll = async () => {
+  if (!parsedData.value) return
+
+  // 计算节点数量
+  const nodeCount = countNodes(parsedData.value)
+
+  // 如果节点数超过阈值，显示警告
+  if (nodeCount > MAX_EXPAND_NODES) {
+    try {
+      await ElMessageBox.confirm(
+        `此 JSON 包含 ${nodeCount} 个节点，全部展开可能导致页面卡顿。是否继续？`,
+        '全展开警告',
+        {
+          confirmButtonText: '继续展开',
+          cancelButtonText: '取消',
+          type: 'warning',
+          distinguishCancelAndClose: true
+        }
+      )
+    } catch {
+      // 用户取消操作
+      return
+    }
+  }
+
+  // 展开所有节点
+  expandedNodes.value = addAllPathsToSet(parsedData.value, [], new Set(), Infinity)
+  ElMessage.success('已全部展开')
 }
 
 const collapseAll = () => {
@@ -622,6 +753,7 @@ const updateValue = ({ path, value }: { path: string[], value: any }) => {
   }
 
   parsedData.value = updateNested(parsedData.value, path, value)
+  updateInputJson()  // 按需更新输入框
 }
 
 const updateKey = ({ path, oldKey, newKey }: { path: string[], oldKey: string, newKey: string }) => {
@@ -656,6 +788,7 @@ const updateKey = ({ path, oldKey, newKey }: { path: string[], oldKey: string, n
   }
 
   parsedData.value = renameKey(parsedData.value, parentPath)
+  updateInputJson()  // 按需更新输入框
 }
 
 const deleteNode = (path: string[]) => {
@@ -683,6 +816,7 @@ const deleteNode = (path: string[]) => {
   }
 
   parsedData.value = deleteNested(parsedData.value, path)
+  updateInputJson()  // 按需更新输入框
 }
 
 const addItem = (path: string[]) => {
@@ -706,6 +840,37 @@ const addItem = (path: string[]) => {
   }
 
   parsedData.value = addNested(parsedData.value, path)
+  updateInputJson()  // 按需更新输入框
+}
+
+// 复制节点
+const copyNode = async ({ path, data }: { path: string[], data: any }) => {
+  try {
+    // 将数据转换为 JSON 字符串
+    const jsonStr = JSON.stringify(data, null, 2)
+
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(jsonStr)
+    ElMessage.success('节点已复制到剪贴板')
+  } catch (error) {
+    // 如果 clipboard API 不可用，使用传统方法
+    try {
+      const jsonStr = JSON.stringify(data, null, 2)
+      const textarea = document.createElement('textarea')
+      textarea.value = jsonStr
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+
+      document.execCommand('copy')
+      ElMessage.success('节点已复制到剪贴板')
+
+      document.body.removeChild(textarea)
+    } catch {
+      ElMessage.error('复制失败')
+    }
+  }
 }
 
 // ========== Actions ==========
@@ -752,11 +917,12 @@ const copyResult = async () => {
 }
 
 // ========== Watchers ==========
-watch(parsedData, (newData) => {
-  if (newData) {
-    inputJson.value = JSON.stringify(newData, null, indentSpaces.value)
-  }
-}, { deep: true })
+// 深度监听已移除 - 改为按需更新以提升性能
+// watch(parsedData, (newData) => {
+//   if (newData) {
+//     inputJson.value = JSON.stringify(newData, null, indentSpaces.value)
+//   }
+// }, { deep: true })
 
 watch(indentSpaces, () => {
   if (parsedData.value && viewMode.value === 'code') {
@@ -973,6 +1139,19 @@ watch(indentSpaces, () => {
   border-radius: var(--radius-sm);
   color: #cf1322;
   font-size: 13px;
+}
+
+.truncated-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--radius-sm);
+  color: #856404;
+  font-size: 13px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .options-section {

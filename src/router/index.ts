@@ -1,11 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
+      path: '/login',
+      name: 'Login',
+      component: () => import('@/views/Login.vue'),
+      meta: { requiresAuth: false, hideFromMenu: true }
+    },
+    {
       path: '/',
-      redirect: '/stock'
+      redirect: '/tools/json'
     },
     {
       path: '/',
@@ -57,25 +64,45 @@ const router = createRouter({
           path: 'tools',
           name: 'Tools',
           redirect: '/tools/index',
-          meta: { title: '工具集' }
+          meta: { title: '工具集', requiresAuth: false }
         },
         {
           path: 'tools/index',
           name: 'ToolsIndex',
           component: () => import('@/views/ToolsIndex.vue'),
-          meta: { title: '工具集' }
+          meta: { title: '工具集', requiresAuth: false }
         },
         {
           path: 'tools/loan-calculator',
           name: 'LoanCalculator',
           component: () => import('@/views/tools/LoanCalculator.vue'),
-          meta: { title: '提前还贷计算器' }
+          meta: { title: '提前还贷计算器', requiresAuth: false }
         },
         {
           path: 'tools/json',
           name: 'JsonFormatter',
           component: () => import('@/views/tools/JsonFormatter.vue'),
-          meta: { title: 'JSON工具' }
+          meta: { title: 'JSON工具', requiresAuth: false }
+        },
+        {
+          path: 'admin',
+          name: 'Admin',
+          redirect: '/admin/dashboard',
+          meta: { title: '后台管理' },
+          children: [
+            {
+              path: 'dashboard',
+              name: 'AdminDashboard',
+              component: () => import('@/views/admin/AdminDashboard.vue'),
+              meta: { title: '管理首页' }
+            },
+            {
+              path: 'users',
+              name: 'UserManagement',
+              component: () => import('@/views/admin/UserManagement.vue'),
+              meta: { title: '用户管理' }
+            }
+          ]
         },
         {
           path: 'config',
@@ -104,6 +131,50 @@ const router = createRouter({
       ]
     }
   ]
+})
+
+// Navigation guard for authentication
+router.beforeEach((to, _from, next) => {
+  const userStore = useUserStore()
+
+  // Restore session from localStorage before checking auth
+  userStore.restoreSession()
+
+  const isLoggedIn = userStore.isLoggedIn
+
+  console.log('[Router Guard] Path:', to.path, 'Logged in:', isLoggedIn)
+
+  // Tools pages are always accessible (no login required)
+  if (to.path.startsWith('/tools')) {
+    console.log('[Router Guard] Tools page - allowing access')
+    next()
+    return
+  }
+
+  // Login page handling
+  if (to.path === '/login') {
+    if (isLoggedIn) {
+      console.log('[Router Guard] Already logged in, redirecting to tools')
+      next('/tools/json')
+      return
+    }
+    console.log('[Router Guard] Login page - allowing access')
+    next()
+    return
+  }
+
+  // Other pages require authentication
+  if (!isLoggedIn) {
+    console.log('[Router Guard] Not logged in, redirecting to login')
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    })
+    return
+  }
+
+  console.log('[Router Guard] Logged in, allowing access to', to.path)
+  next()
 })
 
 export default router

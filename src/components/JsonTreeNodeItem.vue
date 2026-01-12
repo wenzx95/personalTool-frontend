@@ -69,10 +69,19 @@
         </span>
 
         <!-- Delete text (for short primitives) -->
-        <span v-if="isPrimitive && !isLongText && path.length > 0" class="delete-text" @click.stop="$emit('deleteNode', path)">删除</span>
+        <div v-if="isPrimitive && !isLongText && path.length > 0" class="primitive-actions">
+          <span class="copy-text" @click.stop="$emit('copyNode', { path, data })">复制</span>
+          <span class="delete-text" @click.stop="$emit('deleteNode', path)">删除</span>
+        </div>
 
         <!-- Actions (only for objects/arrays) -->
         <div v-if="(isObject || isArray) && path.length > 0" class="node-actions">
+          <span
+            class="copy-text"
+            @click.stop="$emit('copyNode', { path, data })"
+          >
+            复制
+          </span>
           <span
             class="delete-text"
             @click.stop="$emit('deleteNode', path)"
@@ -103,8 +112,11 @@
             class="edit-input"
           />
         </span>
-        <!-- Delete button for long text -->
-        <span v-if="path.length > 0" class="delete-text long-text-delete" @click.stop="$emit('deleteNode', path)">删除</span>
+        <!-- Actions for long text -->
+        <div v-if="path.length > 0" class="long-text-actions">
+          <span class="copy-text long-text-copy" @click.stop="$emit('copyNode', { path, data })">复制</span>
+          <span class="delete-text long-text-delete" @click.stop="$emit('deleteNode', path)">删除</span>
+        </div>
       </div>
     </div>
 
@@ -124,6 +136,7 @@
           @update-value="$emit('updateValue', $event)"
           @delete-node="$emit('deleteNode', $event)"
           @add-item="$emit('addItem', $event)"
+          @copy-node="$emit('copyNode', $event)"
         />
       </template>
 
@@ -140,6 +153,7 @@
           @update-value="$emit('updateValue', $event)"
           @delete-node="$emit('deleteNode', $event)"
           @add-item="$emit('addItem', $event)"
+          @copy-node="$emit('copyNode', $event)"
         />
       </template>
     </div>
@@ -148,7 +162,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { ArrowDown, ArrowRight, Plus } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowRight } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   data: any
@@ -164,6 +178,7 @@ const emit = defineEmits<{
   updateKey: [{ path: string[], oldKey: string, newKey: string }]
   deleteNode: [path: string[]]
   addItem: [path: string[]]
+  copyNode: [{ path: string[], data: any }]
 }>()
 
 const isHovered = ref(false)
@@ -175,31 +190,13 @@ const editKeyValue = ref('')
 const editKeyInput = ref()
 
 // 处理鼠标悬停
-const handleMouseOver = (event: MouseEvent) => {
-  // 只要鼠标进入当前节点的 .node-header 区域就显示删除按钮
-  const target = event.target as HTMLElement
-  const currentTarget = event.currentTarget as HTMLElement
-
-  // 检查是否悬停在 .node-header 或其子元素上
-  const nodeHeader = currentTarget.querySelector('.node-header')
-  if (nodeHeader && nodeHeader.contains(target)) {
-    isHovered.value = true
-  }
+const handleMouseOver = () => {
+  isHovered.value = true
 }
 
 // 处理鼠标离开
-const handleMouseOut = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  const currentTarget = event.currentTarget as HTMLElement
-  const relatedTarget = event.relatedTarget as HTMLElement
-
-  // 检查是否离开了 .node-header 区域
-  const nodeHeader = currentTarget.querySelector('.node-header')
-
-  // 如果离开了 .node-header 且不是移动到 .node-header 内的其他元素
-  if (nodeHeader && (!relatedTarget || !nodeHeader.contains(relatedTarget))) {
-    isHovered.value = false
-  }
+const handleMouseOut = () => {
+  isHovered.value = false
 }
 
 const isArrayItem = computed(() => props.index >= 0)
@@ -500,38 +497,43 @@ const cancelKeyEdit = () => {
   // 第一行的操作按钮样式
 }
 
-// 悬停在整个节点时显示操作按钮
-.json-tree-node-item.is-hovered .node-actions {
-  opacity: 1;
+// 长文本操作按钮容器
+.long-text-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-// Delete text outside actions (for primitives)
-.node-header {
-  .delete-text {
-    color: #f56565;
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: 8px;
-    user-select: none;
-    opacity: 0;
-    transition: opacity 0.2s;
+// 短文本操作按钮容器
+.primitive-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: 8px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
 
-    &:hover {
-      color: #e53e3e;
-      text-decoration: underline;
-    }
+// 复制按钮通用样式
+.copy-text {
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 8px;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  &:hover {
+    color: #2563eb;
+    text-decoration: underline;
   }
 }
 
-// 悬停时显示删除按钮（只有该节点本身）
-.json-tree-node-item.is-hovered > .node-header > .node-key-line > .delete-text,
-.json-tree-node-item.is-hovered > .node-header > .node-key-line > .inline-value ~ .delete-text,
-.json-tree-node-item.is-hovered > .node-header > .node-key-line > .node-actions > .delete-text {
-  opacity: 1;
-}
-
-// 长文本删除按钮样式
-.long-text-delete {
+// 删除按钮通用样式
+.delete-text {
   color: #f56565;
   cursor: pointer;
   font-size: 14px;
@@ -539,7 +541,6 @@ const cancelKeyEdit = () => {
   user-select: none;
   opacity: 0;
   transition: opacity 0.2s;
-  flex-shrink: 0;
 
   &:hover {
     color: #e53e3e;
@@ -547,9 +548,13 @@ const cancelKeyEdit = () => {
   }
 }
 
-// 悬停时显示长文本删除按钮（只有该节点本身）
-.json-tree-node-item.is-hovered > .node-header > .node-value-line > .long-text-delete {
-  opacity: 1;
+// 悬停在整个节点时显示所有操作按钮
+.json-tree-node-item.is-hovered .node-actions,
+.json-tree-node-item.is-hovered .primitive-actions,
+.json-tree-node-item.is-hovered .long-text-actions,
+.json-tree-node-item.is-hovered .copy-text,
+.json-tree-node-item.is-hovered .delete-text {
+  opacity: 1 !important;
 }
 
 .node-children {

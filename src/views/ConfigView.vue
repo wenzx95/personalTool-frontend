@@ -11,7 +11,7 @@
           <el-icon><Refresh /></el-icon>
           刷新配置
         </el-button>
-        <el-button type="success" @click="showAddDialog = true">
+        <el-button type="success" @click="showAddDialog">
           <el-icon><Plus /></el-icon>
           新增配置
         </el-button>

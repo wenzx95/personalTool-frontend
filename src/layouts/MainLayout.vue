@@ -16,7 +16,7 @@
 
       <nav class="sidebar-nav">
         <div
-          v-for="section in menuSections"
+          v-for="section in filteredMenuSections"
           :key="section.title"
           class="nav-section"
         >
@@ -83,12 +83,28 @@
       </nav>
 
       <div class="sidebar-footer">
-        <el-tooltip content="用户名" placement="right" :disabled="!sidebarCollapsed">
+        <el-dropdown v-if="userStore.isLoggedIn" trigger="click" @command="handleLogout">
           <div class="user-profile">
             <el-avatar :size="32" icon="UserFilled" />
             <div class="user-info">
-              <div class="user-name">用户名</div>
+              <div class="user-name">{{ userStore.user?.nickname || '用户' }}</div>
               <div class="user-status">在线</div>
+            </div>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="logout">
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <el-tooltip v-else content="点击登录" placement="right" :disabled="!sidebarCollapsed">
+          <div class="user-profile" @click="router.push('/login')">
+            <el-avatar :size="32" icon="UserFilled" />
+            <div class="user-info">
+              <div class="user-name">游客</div>
+              <div class="user-status">点击登录</div>
             </div>
           </div>
         </el-tooltip>
@@ -161,30 +177,32 @@
 <script setup lang="ts">
 import { ref, computed, markRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessageBox, ElMessage } from 'element-plus'
 import {
   Fold,
   Search,
   Bell,
   Setting,
-  UserFilled,
   TrendCharts,
   Money,
   Tools,
   Management,
   Document,
   DataLine,
-  Grid as Blog,
   ArrowRight,
   Calendar,
   List,
   Download,
   DataAnalysis,
   DocumentCopy,
-  Management as Calculator
+  Management as Calculator,
+  User
 } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const sidebarCollapsed = ref(true)  // 默认收缩
 const searchQuery = ref('')
@@ -235,7 +253,15 @@ const menuSections = ref<MenuSection[]>([
   {
     title: '管理',
     items: [
-      { key: 'admin', label: '后台管理', icon: markRaw(Management) },
+      {
+        key: 'admin',
+        label: '后台管理',
+        icon: markRaw(Management),
+        children: [
+          { key: 'admin/dashboard', label: '管理首页', icon: markRaw(DataLine) },
+          { key: 'admin/users', label: '用户管理', icon: markRaw(User) }
+        ]
+      },
       { key: 'config', label: '系统配置', icon: markRaw(Setting) }
     ]
   },
@@ -247,6 +273,22 @@ const menuSections = ref<MenuSection[]>([
     ]
   }
 ])
+
+// Filter menu sections based on user login status
+const filteredMenuSections = computed(() => {
+  // If not logged in, only show the tools section
+  if (!userStore.isLoggedIn) {
+    return menuSections.value
+      .map(section => ({
+        ...section,
+        items: section.items.filter(item => item.key === 'tools' || item.key.startsWith('tools/'))
+      }))
+      .filter(section => section.items.length > 0)
+  }
+
+  // If logged in, show all menu sections
+  return menuSections.value
+})
 
 const breadcrumbs = computed(() => {
   const matched = route.matched.filter(item => item.meta && item.meta.title)
@@ -281,7 +323,10 @@ const toggleSubmenu = (key: string) => {
 }
 
 const handleNavClick = (key: string) => {
-  router.push(`/${key}`)
+  console.log('[Navigation] Clicked menu item:', key)
+  const path = `/${key}`
+  console.log('[Navigation] Navigating to:', path)
+  router.push(path)
 }
 
 const toggleSidebar = () => {
@@ -290,6 +335,26 @@ const toggleSidebar = () => {
 
 const handleSettingsClick = (action: string) => {
   console.log('Settings action:', action)
+}
+
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要退出登录吗？',
+      '退出登录',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    userStore.logout()
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  } catch {
+    // User cancelled
+  }
 }
 </script>
 

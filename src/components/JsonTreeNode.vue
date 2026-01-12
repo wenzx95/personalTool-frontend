@@ -14,6 +14,7 @@
         @update-key="$emit('updateKey', $event)"
         @delete-node="$emit('deleteNode', $event)"
         @add-item="$emit('addItem', $event)"
+        @copy-node="$emit('copyNode', $event)"
       />
     </template>
 
@@ -31,6 +32,7 @@
         @update-key="$emit('updateKey', $event)"
         @delete-node="$emit('deleteNode', $event)"
         @add-item="$emit('addItem', $event)"
+        @copy-node="$emit('copyNode', $event)"
       />
     </template>
 
@@ -45,6 +47,7 @@
         @update-key="$emit('updateKey', $event)"
         @delete-node="$emit('deleteNode', $event)"
         @add-item="$emit('addItem', $event)"
+        @copy-node="$emit('copyNode', $event)"
       />
     </template>
   </div>
@@ -65,6 +68,7 @@ defineEmits<{
   updateKey: [{ path: string[], oldKey: string, newKey: string }]
   deleteNode: [path: string[]]
   addItem: [path: string[]]
+  copyNode: [{ path: string[], data: any }]
 }>()
 </script>
 
