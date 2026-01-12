@@ -844,7 +844,7 @@ const addItem = (path: string[]) => {
 }
 
 // 复制节点
-const copyNode = async ({ path, data }: { path: string[], data: any }) => {
+const copyNode = async ({ path: _path, data }: { path: string[], data: any }) => {
   try {
     // 将数据转换为 JSON 字符串
     const jsonStr = JSON.stringify(data, null, 2)

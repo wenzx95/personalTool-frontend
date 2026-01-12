@@ -208,7 +208,6 @@ import {
   Document,
   Warning,
   ArrowUp,
-  ArrowDown,
   ArrowRight
 } from '@element-plus/icons-vue'
 import { getUserList } from '@/api/auth'

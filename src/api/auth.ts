@@ -42,6 +42,7 @@ export interface User {
   id: string
   username: string
   nickname: string
+  name?: string
   avatar?: string
   email?: string
   phone?: string
@@ -51,6 +52,13 @@ export interface User {
   remark?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface MenuItem {
+  key: string
+  label: string
+  icon?: string
+  children?: MenuItem[]
 }
 
 export interface UserCreateRequest {
@@ -82,16 +90,16 @@ export const login = async (username: string, password: string): Promise<LoginRe
   const response = await request.post<LoginResponse>('/auth/login', {
     username,
     password
-  })
-  return response as LoginResponse
+  }) as unknown as LoginResponse
+  return response
 }
 
 /**
  * Get current user info
  */
 export const getUserInfo = async (): Promise<UserInfo> => {
-  const response = await request.get<UserInfo>('/auth/profile')
-  return response.data
+  const response = await request.get<UserInfo>('/auth/profile') as unknown as UserInfo
+  return response
 }
 
 /**
@@ -124,7 +132,7 @@ export const getUserList = async (params?: { page?: number; size?: number; searc
  */
 export const createUser = async (data: UserCreateRequest): Promise<User> => {
   console.log('[API] 创建用户，请求数据:', data)
-  const response = await request.post<User>('/auth/users', data)
+  const response = await request.post<User>('/auth/users', data) as unknown as User
   console.log('[API] 创建用户成功，响应:', response)
   return response
 }
@@ -148,4 +156,25 @@ export const deleteUser = async (id: string): Promise<void> => {
  */
 export const resetPassword = async (id: string, newPassword: string): Promise<void> => {
   return request.put(`/auth/users/${id}/reset-password`, {}, { params: { newPassword } })
+}
+
+/**
+ * Get menu list
+ */
+export const getMenuList = async (): Promise<MenuItem[]> => {
+  return request.get('/auth/menus')
+}
+
+/**
+ * Get user menu permissions
+ */
+export const getUserMenuPermissions = async (userId: string): Promise<string[]> => {
+  return request.get(`/auth/users/${userId}/menus`)
+}
+
+/**
+ * Set user menu permissions
+ */
+export const setUserMenuPermissions = async (userId: string, menuKeys: string[]): Promise<void> => {
+  return request.put(`/auth/users/${userId}/menus`, { menuKeys })
 }

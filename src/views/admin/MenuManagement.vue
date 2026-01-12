@@ -197,7 +197,7 @@ const filterUserNode = (value: string, data: User) => {
   if (!value) return true
   return (
     data.username.toLowerCase().includes(value.toLowerCase()) ||
-    data.name.toLowerCase().includes(value.toLowerCase()) ||
+    (data.name && data.name.toLowerCase().includes(value.toLowerCase())) ||
     (data.email && data.email.toLowerCase().includes(value.toLowerCase()))
   )
 }
@@ -205,7 +205,7 @@ const filterUserNode = (value: string, data: User) => {
 // 搜索菜单节点
 const filterMenuNode = (value: string, data: MenuItem) => {
   if (!value) return true
-  return data.name.toLowerCase().includes(value.toLowerCase())
+  return data.label.toLowerCase().includes(value.toLowerCase())
 }
 
 // 点击用户节点
