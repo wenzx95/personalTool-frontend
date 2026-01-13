@@ -3,13 +3,13 @@
     <el-card class="login-card">
       <div class="login-header">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon">
-          <rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/>
-          <rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.6"/>
-          <rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.6"/>
-          <rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.3"/>
+          <rect width="24" height="24" rx="6" fill="#409EFF"/>
+          <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="18" cy="16" r="3" fill="white"/>
+          <path d="M18 14.5v3M18 15.5l1.5-1.5M18 16.5l-1.5 1.5" stroke="#409EFF" stroke-width="1" stroke-linecap="round"/>
         </svg>
-        <h1 class="login-title">PersonalTool</h1>
-        <p class="login-subtitle">内部工具系统</p>
+        <h1 class="login-title">工具集</h1>
+        <p class="login-subtitle">个人效率工具平台</p>
       </div>
 
       <el-form
@@ -65,7 +65,7 @@
       </el-form>
 
       <div class="login-footer">
-        <el-text size="small" type="info">内部系统，请使用分配的账号登录</el-text>
+        <el-text size="small" type="info">个人工具集 · 效率提升平台</el-text>
       </div>
     </el-card>
   </div>

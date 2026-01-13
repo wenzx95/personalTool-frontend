@@ -101,6 +101,18 @@ const router = createRouter({
               name: 'UserManagement',
               component: () => import('@/views/admin/UserManagement.vue'),
               meta: { title: '用户管理' }
+            },
+            {
+              path: 'scheduled-tasks',
+              name: 'ScheduledTasks',
+              component: () => import('@/views/admin/ScheduledTasks.vue'),
+              meta: { title: '定时任务管理' }
+            },
+            {
+              path: 'system-logs',
+              name: 'SystemLogs',
+              component: () => import('@/views/admin/SystemLogs.vue'),
+              meta: { title: '日志管理' }
             }
           ]
         },

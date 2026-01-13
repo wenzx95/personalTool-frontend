@@ -125,7 +125,7 @@ export const getMarketReview = (tradeDate?: string, sessionId?: string): Promise
     params.sessionId = sessionId
   }
   return marketRequest({
-    url: '/v1/market/review',
+    url: '/market/review',
     method: 'GET',
     params
   })
@@ -134,7 +134,7 @@ export const getMarketReview = (tradeDate?: string, sessionId?: string): Promise
 // 获取复盘记录列表
 export const getReviewList = (limit = 100, offset = 0): Promise<MarketReviewData[]> => {
   return marketRequest({
-    url: '/v1/market/review/list',
+    url: '/market/review/list',
     method: 'GET',
     params: { limit, offset }
   })
@@ -143,7 +143,7 @@ export const getReviewList = (limit = 100, offset = 0): Promise<MarketReviewData
 // 获取指定日期的复盘记录
 export const getReviewDetail = (date: string): Promise<MarketReviewData> => {
   return marketRequest({
-    url: `/v1/market/review/detail/${date}`,
+    url: `/market/review/detail/${date}`,
     method: 'GET'
   })
 }
@@ -152,7 +152,7 @@ export const getReviewDetail = (date: string): Promise<MarketReviewData> => {
 export const createReview = (data: CreateReviewRequest, sessionId?: string): Promise<MarketReviewData> => {
   const params = sessionId ? { sessionId } : {}
   return marketRequest({
-    url: '/v1/market/review/create',
+    url: '/market/review/create',
     method: 'POST',
     params,
     data
@@ -162,7 +162,7 @@ export const createReview = (data: CreateReviewRequest, sessionId?: string): Pro
 // 更新复盘记录
 export const updateReview = (reviewId: number, data: UpdateReviewRequest): Promise<MarketReviewData> => {
   return marketRequest({
-    url: `/v1/market/review/update/${reviewId}`,
+    url: `/market/review/update/${reviewId}`,
     method: 'PUT',
     data
   })
@@ -171,7 +171,7 @@ export const updateReview = (reviewId: number, data: UpdateReviewRequest): Promi
 // 删除复盘记录
 export const deleteReview = (reviewId: number): Promise<void> => {
   return marketRequest({
-    url: `/v1/market/review/delete/${reviewId}`,
+    url: `/market/review/delete/${reviewId}`,
     method: 'DELETE'
   })
 }

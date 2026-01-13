@@ -5,12 +5,12 @@
       <div class="sidebar-header">
         <div class="logo">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon">
-            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/>
-            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.6"/>
-            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.6"/>
-            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.3"/>
+            <rect width="24" height="24" rx="6" fill="#409EFF"/>
+            <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="18" cy="16" r="3" fill="white"/>
+            <path d="M18 14.5v3M18 15.5l1.5-1.5M18 16.5l-1.5 1.5" stroke="#409EFF" stroke-width="1" stroke-linecap="round"/>
           </svg>
-          <span class="logo-text">PersonalTool</span>
+          <span class="logo-text">工具集</span>
         </div>
       </div>
 
@@ -83,9 +83,10 @@
       </nav>
 
       <div class="sidebar-footer">
+        <!-- 已登录用户 -->
         <el-dropdown v-if="userStore.isLoggedIn" trigger="click" @command="handleLogout">
-          <div class="user-profile">
-            <el-avatar :size="32" icon="UserFilled" />
+          <div class="user-profile logged-in">
+            <el-avatar :size="28" icon="UserFilled" />
             <div class="user-info">
               <div class="user-name">{{ userStore.user?.nickname || '用户' }}</div>
               <div class="user-status">在线</div>
@@ -99,15 +100,17 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <el-tooltip v-else content="点击登录" placement="right" :disabled="!sidebarCollapsed">
-          <div class="user-profile" @click="router.push('/login')">
-            <el-avatar :size="32" icon="UserFilled" />
-            <div class="user-info">
-              <div class="user-name">游客</div>
-              <div class="user-status">点击登录</div>
+
+        <!-- 未登录用户 -->
+        <div v-else class="user-profile not-logged-in" @click="router.push('/login')">
+          <div class="login-prompt">
+            <el-icon :size="24"><User /></el-icon>
+            <div class="login-text">
+              <div class="login-title">点击登录</div>
+              <div class="login-subtitle">访问更多功能</div>
             </div>
           </div>
-        </el-tooltip>
+        </div>
       </div>
     </el-aside>
 
@@ -259,7 +262,9 @@ const menuSections = ref<MenuSection[]>([
         icon: markRaw(Management),
         children: [
           { key: 'admin/dashboard', label: '管理首页', icon: markRaw(DataLine) },
-          { key: 'admin/users', label: '用户管理', icon: markRaw(User) }
+          { key: 'admin/users', label: '用户管理', icon: markRaw(User) },
+          { key: 'admin/scheduled-tasks', label: '定时任务', icon: markRaw(Setting) },
+          { key: 'admin/system-logs', label: '日志管理', icon: markRaw(Document) }
         ]
       },
       { key: 'config', label: '系统配置', icon: markRaw(Setting) }
@@ -413,8 +418,20 @@ const handleLogout = async () => {
 .sidebar.collapsed .nav-badge,
 .sidebar.collapsed .submenu-arrow,
 .sidebar.collapsed .submenu,
-.sidebar.collapsed .nav-section-title,
-.sidebar.collapsed .user-info {
+.sidebar.collapsed .nav-section-title {
+  display: none;
+}
+
+/* 侧边栏折叠时，登录提示只显示图标 */
+.sidebar.collapsed .not-logged-in {
+  padding: var(--spacing-sm);
+}
+
+.sidebar.collapsed .login-text {
+  display: none;
+}
+
+.sidebar.collapsed .logged-in .user-info {
   display: none;
 }
 
@@ -548,6 +565,31 @@ const handleLogout = async () => {
   width: 100%;
 }
 
+.user-profile.logged-in {
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.user-profile.logged-in:hover {
+  background: var(--color-bg-secondary);
+}
+
+.user-profile.not-logged-in {
+  cursor: pointer;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+  transition: all var(--transition-base);
+}
+
+.user-profile.not-logged-in:hover {
+  background: linear-gradient(135deg, #337ecc 0%, #409EFF 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+}
+
 .user-info {
   flex: 1;
   min-width: 0;
@@ -565,6 +607,41 @@ const handleLogout = async () => {
 .user-status {
   font-size: 0.75rem;
   color: var(--color-success);
+}
+
+/* 未登录时的登录提示 */
+.login-prompt {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.login-prompt .el-icon {
+  color: white;
+  flex-shrink: 0;
+}
+
+.login-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.login-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.login-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Main Container */
@@ -606,6 +683,7 @@ const handleLogout = async () => {
   background: var(--color-bg-secondary);
   overflow-y: auto;
   padding: var(--spacing-xl);
+  position: relative;
 }
 
 /* Transitions */

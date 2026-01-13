@@ -25,20 +25,26 @@
         <div class="stat-value">{{ stats.total }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">Python服务</div>
-        <div class="stat-value text-blue">{{ stats.byCategory.python_service || 0 }}</div>
+        <div class="stat-label">AI配置</div>
+        <div class="stat-value text-blue">{{ stats.byCategory.ai || 0 }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">市场配置</div>
-        <div class="stat-value text-green">{{ stats.byCategory.market || 0 }}</div>
+        <div class="stat-label">任务配置</div>
+        <div class="stat-value text-green">{{ stats.byCategory.task || 0 }}</div>
       </div>
       <div class="stat-item">
         <div class="stat-label">系统配置</div>
         <div class="stat-value text-orange">{{ stats.byCategory.system || 0 }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">缓存配置</div>
-        <div class="stat-value text-purple">{{ stats.byCategory.cache || 0 }}</div>
+        <div class="stat-label">其他</div>
+        <div class="stat-value text-purple">{{
+          (stats.byCategory.python_service || 0) +
+          (stats.byCategory.market || 0) +
+          (stats.byCategory.cache || 0) +
+          (stats.byCategory.logging || 0) +
+          (stats.byCategory.security || 0)
+        }}</div>
       </div>
     </div>
 
@@ -51,6 +57,8 @@
         style="width: 200px"
       >
         <el-option label="全部分类" value=""></el-option>
+        <el-option label="AI" value="ai"></el-option>
+        <el-option label="任务" value="task"></el-option>
         <el-option label="Python服务" value="python_service"></el-option>
         <el-option label="市场" value="market"></el-option>
         <el-option label="系统" value="system"></el-option>
@@ -176,6 +184,8 @@
 
           <el-form-item label="分类" prop="category">
             <el-select v-model="editForm.category" placeholder="选择分类">
+              <el-option label="AI" value="ai"></el-option>
+              <el-option label="任务" value="task"></el-option>
               <el-option label="Python服务" value="python_service"></el-option>
               <el-option label="市场" value="market"></el-option>
               <el-option label="系统" value="system"></el-option>
@@ -458,6 +468,8 @@ const getConfigTypeTagType = (type: string) => {
  */
 const getCategoryLabel = (category: string) => {
   const categoryMap: Record<string, string> = {
+    ai: 'AI',
+    task: '任务',
     python_service: 'Python服务',
     market: '市场',
     system: '系统',
