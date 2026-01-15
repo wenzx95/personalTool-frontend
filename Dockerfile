@@ -3,9 +3,14 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+# 使用淘宝 npm 镜像源加速
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install
+# 添加 BUILD_TIME 参数，每次构建时传入不同值来破坏缓存
+ARG BUILD_TIME=unknown
 COPY . .
-RUN npm run build
+# 显示构建时间并构建
+RUN echo "Build time: $BUILD_TIME" && npm run build:no-check
 
 # 阶段2: 运行
 FROM nginx:alpine

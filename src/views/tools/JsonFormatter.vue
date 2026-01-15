@@ -52,6 +52,10 @@
           <el-icon><FolderAdd /></el-icon>
           保存案例
         </el-button>
+        <el-button @click="updateSelectedCase" :disabled="!selectedCaseId || !parsedData">
+          <el-icon><Document /></el-icon>
+          更新案例
+        </el-button>
         <el-button @click="clearAll">
           <el-icon><Delete /></el-icon>
           清空
@@ -89,6 +93,9 @@
                 </el-tooltip>
               </div>
               <div class="case-item-actions">
+                <el-button link size="small" @click.stop="updateCase(item.id)" title="更新">
+                  <el-icon><FolderAdd /></el-icon>
+                </el-button>
                 <el-button link size="small" @click.stop="renameCase(item.id)" title="重命名">
                   <el-icon><Edit /></el-icon>
                 </el-button>
@@ -133,6 +140,7 @@
             type="textarea"
             placeholder="在此粘贴或输入 JSON 字符串...&#10;支持非标准格式，如：{1:'hellop'} 或 {name:'test',}"
             @input="debouncedValidate"
+            @blur="handleInputBlur"
           />
         </div>
         <div v-if="errorMessage" class="error-message">
@@ -265,6 +273,7 @@ const viewMode = ref<ViewMode>('tree')
 const parsedData = ref<any>(null)
 const expandedNodes = ref<Set<string>>(new Set())
 const leftPanelCollapsed = ref(false)
+const isCompressed = ref(false)  // 标记是否为压缩模式
 
 const savedCases = ref<SavedCase[]>([])
 const selectedCaseId = ref<string | null>(null)
@@ -302,6 +311,8 @@ const addAllPathsToSet = (
 
   if (Array.isArray(obj)) {
     obj.forEach((item, index) => {
+      // 如果数组项是对象或数组，并且当前深度小于 maxDepth - 1，那么需要多展开一层
+      // 这样用户可以看到数组项的详细内容，而不是只看到索引
       if (typeof item === 'object' && item !== null) {
         addAllPathsToSet(item, [...path, index.toString()], set, maxDepth)
       }
@@ -357,6 +368,34 @@ const saveCasesToStorage = () => {
     console.error('保存案例失败:', error)
     ElMessage.error('保存失败，可能是存储空间不足')
   }
+}
+
+const updateSelectedCase = () => {
+  if (!selectedCaseId) {
+    ElMessage.warning('请先选择要更新的案例')
+    return
+  }
+  updateCase(selectedCaseId.value as string)
+}
+
+const updateCase = (id: string) => {
+  if (!parsedData.value) {
+    ElMessage.warning('没有可更新的内容')
+    return
+  }
+
+  const caseItem = savedCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.confirm(`确定要更新案例"${caseItem.name}"吗？`, '更新案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(() => {
+    caseItem.data = deepClone(parsedData.value)
+    saveCasesToStorage()
+    ElMessage.success('案例更新成功')
+  }).catch(() => {})
 }
 
 const saveCase = () => {
@@ -464,6 +503,37 @@ const debouncedValidate = debounce(() => {
   validateJson()
 }, 300)
 
+// 处理输入框失去焦点事件 - 自动格式化
+const handleInputBlur = async () => {
+  // 只有当内容有效且没有被格式化过时才自动格式化
+  if (!inputJson.value.trim() || !isValid.value) {
+    return
+  }
+
+  try {
+    // 检查是否已经是格式化的JSON（包含换行符）
+    const isFormatted = inputJson.value.includes('\n')
+
+    // 如果还没有格式化，自动格式化
+    if (!isFormatted) {
+      const parsed = parseInput(inputJson.value)
+
+      // 更新输入框为格式化后的JSON
+      inputJson.value = JSON.stringify(parsed, null, indentSpaces.value)
+
+      // 如果还没有解析后的数据，则显示树视图
+      if (!parsedData.value) {
+        parsedData.value = parsed
+        viewMode.value = 'tree'
+        expandedNodes.value = addAllPathsToSet(parsed, [], new Set(), 2)
+      }
+    }
+  } catch (error) {
+    // 格式化失败时不做处理，保留原内容
+    console.warn('自动格式化失败:', error)
+  }
+}
+
 // 按需更新输入框（防抖 500ms）
 const updateInputJson = debounce(() => {
   if (parsedData.value) {
@@ -502,6 +572,14 @@ const formatJson = async () => {
     viewMode.value = 'tree'
     expandedNodes.value = addAllPathsToSet(parsed, [], new Set(), 2)  // 只展开 2 层
 
+    // 同时更新原始JSON输入框
+    inputJson.value = JSON.stringify(parsed, null, indentSpaces.value)
+    errorMessage.value = ''
+    isValid.value = true
+
+    // 取消压缩模式
+    isCompressed.value = false
+
     ElMessage.success('格式化成功')
   } catch (error: any) {
     ElMessage.error('格式化失败: ' + error.message)
@@ -518,16 +596,41 @@ const compressJson = async () => {
   }
 
   processing.value = true
+  processingDetail.value = '正在解析...'
   try {
+    await nextTick()
+
+    // 使用 setTimeout 避免 UI 阻塞
+    await new Promise(resolve => setTimeout(resolve, 0))
+
     const parsed = parseInput(inputJson.value)
-    outputJson.value = JSON.stringify(parsed)
+
+    processingDetail.value = '正在压缩...'
+    await nextTick()
+
+    // 压缩后的JSON（单行）
+    const compressed = JSON.stringify(parsed)
+
+    // 更新左侧原始JSON输入框为压缩后的内容
+    inputJson.value = compressed
     parsedData.value = parsed
+
+    // 更新错误状态
+    errorMessage.value = ''
+    isValid.value = true
+
+    // 设置压缩模式标志
+    isCompressed.value = true
+
+    // 切换到代码视图，并在代码视图中显示压缩后的内容
     viewMode.value = 'code'
+
     ElMessage.success('压缩成功')
   } catch (error: any) {
     ElMessage.error('压缩失败: ' + error.message)
   } finally {
     processing.value = false
+    processingDetail.value = ''
   }
 }
 
@@ -559,6 +662,14 @@ const deepFormatJson = async () => {
     parsedData.value = parsed
     viewMode.value = 'tree'
     expandedNodes.value = addAllPathsToSet(parsed, [], new Set(), 2)  // 只展开 2 层
+
+    // 同时更新原始JSON输入框
+    inputJson.value = JSON.stringify(parsed, null, indentSpaces.value)
+    errorMessage.value = ''
+    isValid.value = true
+
+    // 取消压缩模式
+    isCompressed.value = false
 
     ElMessage.success('深度格式化成功')
   } catch (error: any) {
@@ -662,7 +773,16 @@ const getStats = () => {
 const highlightedOutput = computed(() => {
   if (!parsedData.value) return { html: '', truncated: false, remaining: 0 }
 
-  const json = JSON.stringify(parsedData.value, null, indentSpaces.value)
+  let json: string
+
+  // 压缩模式下，直接使用 inputJson（已经是压缩后的单行）
+  if (isCompressed.value) {
+    json = inputJson.value
+  } else {
+    // 非压缩模式下，使用 parsedData 格式化显示
+    json = JSON.stringify(parsedData.value, null, indentSpaces.value)
+  }
+
   const lines = json.split('\n')
 
   // 如果超过最大行数，截断并显示提示
@@ -687,10 +807,45 @@ const highlightedOutput = computed(() => {
 const toggleExpand = (path: string[]) => {
   const key = path.join('-')
   if (expandedNodes.value.has(key)) {
+    // 折叠节点时，只需要删除当前节点的展开状态
     expandedNodes.value.delete(key)
   } else {
+    // 展开节点时，添加当前节点的展开状态
     expandedNodes.value.add(key)
+
+    // 如果节点深度大于0（不是根节点），并且是数组节点，自动展开其所有子节点（多展开一层）
+    // 这样根节点的数组不会自动展开，避免显示过于复杂
+    if (path.length > 0) {
+      const targetNode = getNodeByPath(parsedData.value, path)
+      if (Array.isArray(targetNode)) {
+        targetNode.forEach((item, index) => {
+          if (item !== null && typeof item === 'object') {
+            const childPath = [...path, index.toString()]
+            const childKey = childPath.join('-')
+            expandedNodes.value.add(childKey)
+          }
+        })
+      }
+    }
   }
+}
+
+// 根据路径获取节点
+const getNodeByPath = (data: any, path: string[]): any => {
+  if (path.length === 0) return data
+
+  let current = data
+  for (const segment of path) {
+    if (Array.isArray(current)) {
+      const index = parseInt(segment)
+      current = current[index]
+    } else if (current !== null && typeof current === 'object') {
+      current = current[segment]
+    } else {
+      return undefined
+    }
+  }
+  return current
 }
 
 const expandAll = async () => {
@@ -846,18 +1001,34 @@ const addItem = (path: string[]) => {
 // 复制节点
 const copyNode = async ({ path: _path, data }: { path: string[], data: any }) => {
   try {
-    // 将数据转换为 JSON 字符串
-    const jsonStr = JSON.stringify(data, null, 2)
+    let textToCopy: string
+
+    // 如果是字符串，去除双引号后复制
+    if (typeof data === 'string') {
+      textToCopy = data
+    } else {
+      // 其他类型转换为 JSON 字符串
+      textToCopy = JSON.stringify(data, null, 2)
+    }
 
     // 复制到剪贴板
-    await navigator.clipboard.writeText(jsonStr)
+    await navigator.clipboard.writeText(textToCopy)
     ElMessage.success('节点已复制到剪贴板')
   } catch (error) {
     // 如果 clipboard API 不可用，使用传统方法
     try {
-      const jsonStr = JSON.stringify(data, null, 2)
+      let textToCopy: string
+
+      // 如果是字符串，去除双引号后复制
+      if (typeof data === 'string') {
+        textToCopy = data
+      } else {
+        // 其他类型转换为 JSON 字符串
+        textToCopy = JSON.stringify(data, null, 2)
+      }
+
       const textarea = document.createElement('textarea')
-      textarea.value = jsonStr
+      textarea.value = textToCopy
       textarea.style.position = 'fixed'
       textarea.style.opacity = '0'
       document.body.appendChild(textarea)
@@ -1262,10 +1433,22 @@ watch(indentSpaces, () => {
 
 .case-item-actions {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 0px;
   opacity: 0;
   transition: opacity var(--transition-fast);
   flex-shrink: 0;
+
+  .el-button {
+    padding: 0 !important;
+    min-width: auto !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+
+    .el-icon {
+      font-size: 11px !important;
+    }
+  }
 }
 
 @media (max-width: 1024px) {

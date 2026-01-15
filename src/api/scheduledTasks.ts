@@ -42,14 +42,30 @@ export interface TaskStats {
  * 获取所有任务列表
  */
 export const getAllTasks = (): Promise<ScheduledTask[]> => {
-  return request.get('/scheduled-tasks').then((res: any) => res.data)
+  return request.get('/scheduled-tasks').then((res: any) => {
+    // 后端返回: {code: 200, message: "success", data: [...]}
+    // 响应拦截器返回: response.data
+    return res?.data || []
+  })
 }
 
 /**
  * 获取任务统计信息
  */
 export const getTaskStats = (): Promise<TaskStats> => {
-  return request.get('/scheduled-tasks/stats').then((res: any) => res.data)
+  return request.get('/scheduled-tasks/stats').then((res: any) => {
+    // 后端返回: {code: 200, message: "success", data: {...}}
+    // 响应拦截器返回: response.data
+    return res?.data || {
+      totalTasks: 0,
+      enabledTasks: 0,
+      todayTotal: 0,
+      successRate: '0',
+      totalSuccess: 0,
+      totalFailed: 0,
+      byType: {}
+    }
+  })
 }
 
 /**
@@ -95,4 +111,37 @@ export const triggerTask = (taskCode: string): Promise<{
   }
 }> => {
   return request.post(`/scheduled-tasks/${taskCode}/trigger`).then((res: any) => res.data)
+}
+
+/**
+ * 更新任务配置
+ */
+export const updateTask = (taskCode: string, task: Partial<ScheduledTask>): Promise<{
+  code: number
+  message: string
+  data?: ScheduledTask
+}> => {
+  return request.put(`/scheduled-tasks/${taskCode}`, task).then((res: any) => res.data)
+}
+
+/**
+ * 创建新任务
+ */
+export const createTask = (task: Partial<ScheduledTask>): Promise<{
+  code: number
+  message: string
+  data?: ScheduledTask
+}> => {
+  return request.post('/scheduled-tasks', task).then((res: any) => res.data)
+}
+
+/**
+ * 删除任务
+ */
+export const deleteTask = (taskCode: string): Promise<{
+  code: number
+  message: string
+  data?: { taskCode: string }
+}> => {
+  return request.delete(`/scheduled-tasks/${taskCode}`).then((res: any) => res.data)
 }

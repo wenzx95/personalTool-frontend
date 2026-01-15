@@ -1,7 +1,7 @@
 <template>
   <div
+    ref="nodeRef"
     class="json-tree-node-item"
-    :class="{ 'is-array-item': isArrayItem, 'is-hovered': isHovered }"
     @mouseover="handleMouseOver"
     @mouseout="handleMouseOut"
   >
@@ -11,7 +11,7 @@
       <div class="node-key-line">
         <!-- Expand/Collapse Button -->
         <span
-          v-if="isObject || isArray"
+          v-if="(isObject || isArray)"
           class="expand-btn"
           @click.stop="toggleExpand"
         >
@@ -32,7 +32,7 @@
           <span
             v-if="!isEditingKey"
             class="key-text"
-            @click="startEditKey"
+            @dblclick.stop="startEditKey"
           >"{{ nodeKey }}"</span>
           <el-input
             v-else
@@ -48,11 +48,11 @@
         </span>
 
         <!-- Value inline (for short primitives) -->
-        <span v-if="isPrimitive && !isLongText" class="node-value inline-value" :class="getValueType()">
+        <span v-if="isPrimitive && !isLongText" class="node-value inline-value" :class="getValueType(props.data)">
           <span
             v-if="!isEditing"
             class="value-text"
-            @click="startEditing"
+            @dblclick.stop="startEditing"
           >
             {{ displayValue }}
           </span>
@@ -66,6 +66,11 @@
             @keyup.esc="cancelEdit"
             class="edit-input inline-edit-input"
           />
+        </span>
+
+        <!-- Value summary inline (for objects/arrays in array) -->
+        <span v-if="(isObject || isArray) && !nodeKey && index >= 0" class="node-value inline-value value-summary">
+          {{ getObjectSummary(props.data) }}
         </span>
 
         <!-- Delete text (for short primitives) -->
@@ -93,11 +98,11 @@
 
       <!-- Row 2: Value line (only for long primitives) -->
       <div v-if="isPrimitive && isLongText" class="node-value-line">
-        <span class="node-value" :class="getValueType()">
+        <span class="node-value" :class="getValueType(props.data)">
           <span
             v-if="!isEditing"
             class="value-text"
-            @click="startEditing"
+            @dblclick.stop="startEditing"
           >
             {{ displayValue }}
           </span>
@@ -105,11 +110,11 @@
             v-else
             ref="editInput"
             v-model="editValue"
-            size="small"
+            type="textarea"
+            :autosize="{ minRows: 1, maxRows: 10 }"
             @blur="saveEdit"
-            @keyup.enter="saveEdit"
             @keyup.esc="cancelEdit"
-            class="edit-input"
+            class="edit-input textarea-edit-input"
           />
         </span>
         <!-- Actions for long text -->
@@ -142,19 +147,109 @@
 
       <!-- For arrays: render items with index -->
       <template v-else-if="isArray">
-        <JsonTreeNodeItem
-          v-for="(childItem, childIndex) in props.data"
-          :key="String(childIndex)"
-          :data="childItem"
-          :index="childIndex"
-          :path="[...path, String(childIndex)]"
-          :expanded="expanded"
-          @toggle-expand="$emit('toggleExpand', $event)"
-          @update-value="$emit('updateValue', $event)"
-          @delete-node="$emit('deleteNode', $event)"
-          @add-item="$emit('addItem', $event)"
-          @copy-node="$emit('copyNode', $event)"
-        />
+        <template v-for="(childItem, childIndex) in props.data" :key="String(childIndex)">
+          <!-- Primitive values: display inline -->
+          <div v-if="isPrimitiveValue(childItem)" class="array-item">
+            <div class="json-tree-node-item">
+              <div class="node-header">
+                <div class="node-key-line">
+                  <span class="expand-btn-placeholder"></span>
+                  <span class="node-index">{{ childIndex }}:</span>
+                  <span class="node-value" :class="getValueType(childItem)">
+                    {{ getDisplayValue(childItem) }}
+                  </span>
+                  <div class="primitive-actions">
+                    <span class="copy-text" @click.stop="$emit('copyNode', { path: [...path, String(childIndex)], data: childItem })">
+                      复制
+                    </span>
+                    <span class="delete-text" @click.stop="$emit('deleteNode', [...path, String(childIndex)])">
+                      删除
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Complex values (objects/arrays): display inline with expand -->
+          <div v-else class="array-item">
+            <div class="json-tree-node-item">
+              <div class="node-header">
+                <div class="node-key-line">
+                  <!-- Expand/collapse button -->
+                  <span
+                    class="expand-btn"
+                    @click.stop="toggleChildExpand(childIndex)"
+                  >
+                    <el-icon v-if="isChildExpanded(childIndex)">
+                      <ArrowDown />
+                    </el-icon>
+                    <el-icon v-else>
+                      <ArrowRight />
+                    </el-icon>
+                  </span>
+
+                  <!-- Index -->
+                  <span class="node-index">{{ childIndex }}:</span>
+
+                  <!-- Value summary -->
+                  <span class="node-value value-summary">
+                    {{ getObjectSummary(childItem) }}
+                  </span>
+
+                  <!-- Actions -->
+                  <div class="node-actions">
+                    <span class="copy-text" @click.stop="$emit('copyNode', { path: [...path, String(childIndex)], data: childItem })">
+                      复制
+                    </span>
+                    <span class="delete-text" @click.stop="$emit('deleteNode', [...path, String(childIndex)])">
+                      删除
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Children (expanded content) -->
+              <div v-if="isChildExpanded(childIndex)" class="node-children">
+                <!-- For object -->
+                <template v-if="childItem !== null && typeof childItem === 'object' && !Array.isArray(childItem)">
+                  <template v-for="grandchildKey in Object.keys(childItem)" :key="grandchildKey">
+                    <JsonTreeNodeItem
+                      :data="childItem[grandchildKey]"
+                      :node-key="grandchildKey"
+                      :index="-1"
+                      :path="[...path, String(childIndex), grandchildKey]"
+                      :expanded="expanded"
+                      @toggle-expand="$emit('toggleExpand', $event)"
+                      @update-value="$emit('updateValue', $event)"
+                      @update-key="$emit('updateKey', $event)"
+                      @delete-node="$emit('deleteNode', $event)"
+                      @add-item="$emit('addItem', $event)"
+                      @copy-node="$emit('copyNode', $event)"
+                    />
+                  </template>
+                </template>
+
+                <!-- For array -->
+                <template v-else-if="Array.isArray(childItem)">
+                  <JsonTreeNodeItem
+                    :data="childItem"
+                    :node-key="undefined"
+                    :index="-1"
+                    :path="[...path, String(childIndex)]"
+                    :expanded="expanded"
+                    @toggle-expand="$emit('toggleExpand', $event)"
+                    @update-value="$emit('updateValue', $event)"
+                    @update-key="$emit('updateKey', $event)"
+                    @delete-node="$emit('deleteNode', $event)"
+                    @add-item="$emit('addItem', $event)"
+                    @copy-node="$emit('copyNode', $event)"
+                  />
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
       </template>
     </div>
   </div>
@@ -181,6 +276,7 @@ const emit = defineEmits<{
   copyNode: [{ path: string[], data: any }]
 }>()
 
+const nodeRef = ref()
 const isHovered = ref(false)
 const isEditing = ref(false)
 const editValue = ref('')
@@ -190,16 +286,28 @@ const editKeyValue = ref('')
 const editKeyInput = ref()
 
 // 处理鼠标悬停
-const handleMouseOver = () => {
+const handleMouseOver = (e: MouseEvent) => {
+  e.stopPropagation()
   isHovered.value = true
+  // 给当前节点添加 is-hovered 类
+  nodeRef.value?.classList.add('is-hovered')
+  // 找到当前节点的所有祖先节点并隐藏它们的按钮
+  let ancestor = nodeRef.value?.parentNode
+  while (ancestor) {
+    if (ancestor.classList && ancestor.classList.contains('json-tree-node-item')) {
+      ancestor.classList.remove('is-hovered')
+    }
+    ancestor = ancestor.parentNode
+  }
 }
 
 // 处理鼠标离开
-const handleMouseOut = () => {
+const handleMouseOut = (e: MouseEvent) => {
+  e.stopPropagation()
   isHovered.value = false
+  // 移除当前节点的 is-hovered 类
+  nodeRef.value?.classList.remove('is-hovered')
 }
-
-const isArrayItem = computed(() => props.index >= 0)
 
 const isObject = computed(() => {
   return props.data !== null && typeof props.data === 'object' && !Array.isArray(props.data)
@@ -209,11 +317,46 @@ const isArray = computed(() => {
   return Array.isArray(props.data)
 })
 
+const isPrimitiveValue = (value: any) => {
+  return value === null ||
+    value === undefined ||
+    typeof value !== 'object' ||
+    (typeof value === 'object' && Object.keys(value).length === 0 && value.constructor === Object)
+}
+
 const isPrimitive = computed(() => {
-  return props.data === null ||
-    typeof props.data !== 'object' ||
-    (typeof props.data === 'object' && Object.keys(props.data).length === 0 && props.data.constructor === Object)
+  return isPrimitiveValue(props.data)
 })
+
+// 暴露给模板使用
+defineExpose({
+  isPrimitiveValue
+})
+
+const getDisplayValue = (value: any) => {
+  if (value === null) return 'null'
+  if (value === undefined) return 'undefined'
+  if (typeof value === 'string') return `"${value}"`
+  return String(value)
+}
+
+const getValueType = (value: any) => {
+  if (value === null || value === undefined) return 'value-null'
+  if (typeof value === 'boolean') return 'value-boolean'
+  if (typeof value === 'number') return 'value-number'
+  if (typeof value === 'string') return 'value-string'
+  return ''
+}
+
+const getObjectSummary = (value: any) => {
+  if (Array.isArray(value)) {
+    return `Array(${value.length})`
+  } else if (value !== null && typeof value === 'object') {
+    const keys = Object.keys(value)
+    return `{${keys.length} keys}`
+  }
+  return String(value)
+}
 
 const isExpanded = computed(() => {
   const key = props.path.join('-')
@@ -238,14 +381,6 @@ const isLongText = computed(() => {
   const text = displayValue.value
   return text.length > 50
 })
-
-const getValueType = () => {
-  if (props.data === null || props.data === undefined) return 'value-null'
-  if (typeof props.data === 'boolean') return 'value-boolean'
-  if (typeof props.data === 'number') return 'value-number'
-  if (typeof props.data === 'string') return 'value-string'
-  return ''
-}
 
 const toggleExpand = () => {
   emit('toggleExpand', props.path)
@@ -302,6 +437,19 @@ const cancelKeyEdit = () => {
   isEditingKey.value = false
   editKeyValue.value = ''
 }
+
+// 检查子节点是否展开（用于数组中的复杂值）
+const isChildExpanded = (childIndex: number) => {
+  const childPath = [...props.path, String(childIndex)]
+  const key = childPath.join('-')
+  return props.expanded.has(key)
+}
+
+// 切换子节点展开状态
+const toggleChildExpand = (childIndex: number) => {
+  const childPath = [...props.path, String(childIndex)]
+  emit('toggleExpand', childPath)
+}
 </script>
 
 <style scoped lang="scss">
@@ -310,9 +458,10 @@ const cancelKeyEdit = () => {
   padding: 2px 4px;
   border-radius: 4px;
   transition: background-color 0.2s;
+  cursor: pointer;
 
   // 悬停时整个节点包括子元素都有背景色
-  &.is-hovered {
+  &:hover {
     background-color: rgba(0, 0, 0, 0.04);
   }
 }
@@ -369,12 +518,13 @@ const cancelKeyEdit = () => {
 }
 
 .node-index {
-  color: #8b5cf6;
-  font-weight: 600;
+  color: #9ca3af;
+  font-weight: 400;
   margin-right: 4px;
   user-select: none;
-  font-size: 12px;  // 稍微小一点
-  opacity: 0.7;      // 稍微淡一点，表示是虚拟的
+  font-size: 11px;  // 更小一点
+  opacity: 0.5;      // 更淡一点，表示是虚拟的
+  font-style: italic; // 斜体效果
 }
 
 .node-key {
@@ -411,6 +561,20 @@ const cancelKeyEdit = () => {
     margin-right: 8px;
   }
 
+  // 对象/数组摘要显示
+  &.value-summary {
+    color: #f59e0b;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(245, 158, 11, 0.1);
+    }
+  }
+
   .value-text {
     cursor: pointer;
     padding: 2px 4px;
@@ -444,6 +608,11 @@ const cancelKeyEdit = () => {
   &.value-null {
     color: #6b7280;
   }
+
+  &.value-object {
+    color: #9ca3af;
+    font-style: italic;
+  }
 }
 
 .edit-input {
@@ -457,10 +626,27 @@ const cancelKeyEdit = () => {
     display: inline-block;
   }
 
+  // 文本域编辑输入框（长文本）
+  &.textarea-edit-input {
+    width: 100%;
+    display: block;
+    vertical-align: top;
+  }
+
   :deep(.el-input__inner) {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 13px;
     padding: 2px 8px;
+  }
+
+  // textarea 特殊样式
+  &.textarea-edit-input :deep(.el-textarea__inner) {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    padding: 4px 8px;
+    line-height: 1.6;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }
 
@@ -548,12 +734,16 @@ const cancelKeyEdit = () => {
   }
 }
 
-// 悬停在整个节点时显示所有操作按钮
-.json-tree-node-item.is-hovered .node-actions,
-.json-tree-node-item.is-hovered .primitive-actions,
-.json-tree-node-item.is-hovered .long-text-actions,
-.json-tree-node-item.is-hovered .copy-text,
-.json-tree-node-item.is-hovered .delete-text {
+// 悬停时显示当前节点的操作按钮
+.json-tree-node-item.is-hovered > .node-header > .node-key-line > .node-actions,
+.json-tree-node-item.is-hovered > .node-header > .node-key-line > .primitive-actions,
+.json-tree-node-item.is-hovered > .node-header > .node-value-line > .long-text-actions,
+.json-tree-node-item.is-hovered > .node-header > .node-key-line > .node-actions .copy-text,
+.json-tree-node-item.is-hovered > .node-header > .node-key-line > .node-actions .delete-text,
+.json-tree-node-item.is-hovered > .node-header > .node-key-line > .primitive-actions .copy-text,
+.json-tree-node-item.is-hovered > .node-header > .node-key-line > .primitive-actions .delete-text,
+.json-tree-node-item.is-hovered > .node-header > .node-value-line > .long-text-actions .copy-text,
+.json-tree-node-item.is-hovered > .node-header > .node-value-line > .long-text-actions .delete-text {
   opacity: 1 !important;
 }
 
@@ -561,5 +751,9 @@ const cancelKeyEdit = () => {
   margin-left: 24px;
   padding-left: 8px;
   border-left: 1px solid #e5e7eb;
+}
+
+.array-item {
+  margin: 2px 0;
 }
 </style>

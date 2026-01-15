@@ -85,6 +85,12 @@ const router = createRouter({
           meta: { title: 'JSON工具', requiresAuth: false }
         },
         {
+          path: 'tools/json-comparator',
+          name: 'JsonComparator',
+          component: () => import('@/views/tools/JsonComparator.vue'),
+          meta: { title: 'JSON比对', requiresAuth: false }
+        },
+        {
           path: 'admin',
           name: 'Admin',
           redirect: '/admin/dashboard',
@@ -121,6 +127,8 @@ const router = createRouter({
           name: 'Config',
           component: () => import('@/views/ConfigView.vue'),
           meta: { title: '系统配置' }
+          // 注意：此页面需要后端 SystemConfigController 支持
+          // 如果遇到404错误，请确保后端已部署最新的代码
         },
         {
           path: 'blog',

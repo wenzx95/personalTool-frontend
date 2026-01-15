@@ -172,6 +172,12 @@
             <component :is="Component" />
           </transition>
         </router-view>
+
+        <!-- 版本信息 -->
+        <div class="version-info">
+          <span>前端版本: {{ frontendVersion }}</span>
+          <span v-if="backendVersion" style="margin-left: 20px">后端版本: {{ backendVersion }}</span>
+        </div>
       </el-main>
     </el-container>
   </el-container>
@@ -202,10 +208,30 @@ import {
   User
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { APP_VERSION } from '@/version'
+import request from '@/api/request'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+
+// 版本信息
+const frontendVersion = ref(`${APP_VERSION.buildDate} ${APP_VERSION.buildTimeShort}`)
+const backendVersion = ref('')
+
+// 获取后端版本信息
+const fetchBackendVersion = async () => {
+  try {
+    const versionData: any = await request.get('/version')
+    backendVersion.value = versionData.buildTime || '未知'
+  } catch (error) {
+    console.error('获取后端版本失败:', error)
+    backendVersion.value = '获取失败'
+  }
+}
+
+// 页面加载时获取后端版本
+fetchBackendVersion()
 
 const sidebarCollapsed = ref(true)  // 默认收缩
 const searchQuery = ref('')
@@ -248,7 +274,8 @@ const menuSections = ref<MenuSection[]>([
         icon: markRaw(Tools),
         children: [
           { key: 'tools/loan-calculator', label: '还贷计算器', icon: markRaw(Calculator) },
-          { key: 'tools/json', label: 'JSON工具', icon: markRaw(DocumentCopy) }
+          { key: 'tools/json', label: 'JSON工具', icon: markRaw(DocumentCopy) },
+          { key: 'tools/json-comparator', label: 'JSON比对', icon: markRaw(DocumentCopy) }
         ]
       }
     ]
@@ -684,6 +711,15 @@ const handleLogout = async () => {
   overflow-y: auto;
   padding: var(--spacing-xl);
   position: relative;
+}
+
+.version-info {
+  margin-top: auto;
+  padding-top: var(--spacing-lg);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  border-top: 1px solid var(--color-border-light);
 }
 
 /* Transitions */

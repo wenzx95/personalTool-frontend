@@ -303,8 +303,11 @@ const loadLogs = async () => {
       platformCode || undefined
     )
 
+    // 确保data是数组
+    const logsData = Array.isArray(data) ? data : []
+
     // 客户端筛选
-    let result = data
+    let result = logsData
     if (logType) result = result.filter(log => log.logType === logType)
     if (logCategory) result = result.filter(log => log.logCategory === logCategory)
     if (status) result = result.filter(log => log.status === status)
@@ -320,6 +323,9 @@ const loadLogs = async () => {
   } catch (error) {
     console.error('加载日志失败:', error)
     ElMessage.error('加载失败')
+    // 出错时设置默认值
+    logs.value = []
+    pagination.value.total = 0
   } finally {
     loading.value = false
   }
@@ -328,13 +334,20 @@ const loadLogs = async () => {
 const loadStats = async () => {
   try {
     const data = await getStats()
+    // 确保data是对象，设置默认值
     stats.value = {
-      todayTotal: data.todayTotal,
-      todaySuccess: data.todaySuccess,
-      todayFailed: data.todayFailed
+      todayTotal: data?.todayTotal ?? 0,
+      todaySuccess: data?.todaySuccess ?? 0,
+      todayFailed: data?.todayFailed ?? 0
     }
   } catch (error) {
     console.error('加载统计失败:', error)
+    // 出错时设置默认值
+    stats.value = {
+      todayTotal: 0,
+      todaySuccess: 0,
+      todayFailed: 0
+    }
   }
 }
 

@@ -146,6 +146,17 @@ const tools = ref<Tool[]>([
     usage: '1.2k次'
   },
   {
+    id: 'json-comparator',
+    title: 'JSON比对',
+    description: '对比两个JSON数据的差异，高亮显示变化',
+    icon: DocumentCopy,
+    category: 'formatter',
+    route: '/tools/json-comparator',
+    status: 'beta',
+    color: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+    usage: '321次'
+  },
+  {
     id: 'loan-calculator',
     title: '提前还贷计算器',
     description: '计算提前还款的利息节省和还款方案',

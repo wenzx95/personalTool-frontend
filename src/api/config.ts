@@ -41,6 +41,12 @@ configRequest.interceptors.response.use(
   (error) => {
     console.error('[Config API Network Error]', error.config?.url, error.message, error)
 
+    // Handle 404 errors - 页面或API不存在
+    if (error.response?.status === 404) {
+      ElMessage.error('系统配置功能暂不可用，请联系管理员')
+      return Promise.reject(error)
+    }
+
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       ElMessage.error('请先登录')

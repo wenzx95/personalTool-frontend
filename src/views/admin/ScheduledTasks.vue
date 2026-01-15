@@ -58,7 +58,7 @@
     <el-card class="filter-card" shadow="never">
       <el-form :inline="true" :model="filters">
         <el-form-item label="任务类型">
-          <el-select v-model="filters.type" placeholder="全部" clearable style="width: 150px" @change="applyFilters">
+          <el-select v-model="filters.type" placeholder="全部" clearable style="width: 150px">
             <el-option label="全部" value="" />
             <el-option label="AI保活" value="keepalive" />
             <el-option label="数据采集" value="data_collection" />
@@ -66,21 +66,29 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px" @change="applyFilters">
+          <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
             <el-option label="全部" value="" />
             <el-option label="已启用" value="enabled" />
             <el-option label="已禁用" value="disabled" />
           </el-select>
         </el-form-item>
         <el-form-item label="平台">
-          <el-select v-model="filters.platform" placeholder="全部" clearable style="width: 150px" @change="applyFilters">
+          <el-select v-model="filters.platform" placeholder="全部" clearable style="width: 150px">
             <el-option label="全部" value="" />
             <el-option label="智谱AI" value="zhipu" />
             <el-option label="豆包AI" value="doubao" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="loadData">
+          <el-button type="primary" @click="handleQuery">
+            <el-icon><Search /></el-icon>
+            查询
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><RefreshLeft /></el-icon>
+            重置
+          </el-button>
+          <el-button type="success" @click="loadData">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
@@ -227,6 +235,55 @@
         <el-button type="primary" @click="handleCreateTask" :loading="creating">创建</el-button>
       </template>
     </el-dialog>
+
+    <!-- 编辑任务对话框 -->
+    <el-dialog
+      v-model="showEditDialog"
+      title="编辑任务配置"
+      width="600px"
+      @close="resetEditForm"
+    >
+      <el-form :model="editForm" label-width="100px" :rules="editRules" ref="editFormRef">
+        <el-form-item label="任务代码">
+          <el-input v-model="editForm.taskCode" disabled />
+          <div class="hint">任务代码唯一标识，不可修改</div>
+        </el-form-item>
+        <el-form-item label="任务类型">
+          <el-tag :type="getTypeTagType(editForm.taskType)">{{ getTypeLabel(editForm.taskType) }}</el-tag>
+          <div class="hint">任务类型不可修改</div>
+        </el-form-item>
+        <el-form-item label="关联平台" v-if="editForm.platformCode">
+          <el-tag v-if="editForm.platformCode === 'zhipu'" type="primary">智谱AI</el-tag>
+          <el-tag v-else-if="editForm.platformCode === 'doubao'" type="success">豆包AI</el-tag>
+          <div class="hint">关联平台不可修改</div>
+        </el-form-item>
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input v-model="editForm.taskName" placeholder="例如：智谱AI保活" />
+        </el-form-item>
+        <el-form-item label="Cron表达式" prop="cronExpression">
+          <el-input v-model="editForm.cronExpression" placeholder="0 */10 * * * *" />
+          <div class="hint">
+            常用表达式：
+            <el-link type="primary" @click="editForm.cronExpression = '0 */10 * * * *'">每10分钟</el-link>
+            <el-link type="primary" @click="editForm.cronExpression = '0 */5 * * * *'">每5分钟</el-link>
+            <el-link type="primary" @click="editForm.cronExpression = '0 0 * * * *'">每小时</el-link>
+            <el-link type="primary" @click="editForm.cronExpression = '0 0 0 * * *'">每天0点</el-link>
+          </div>
+        </el-form-item>
+        <el-form-item label="任务描述" prop="description">
+          <el-input
+            v-model="editForm.description"
+            type="textarea"
+            :rows="3"
+            placeholder="描述这个任务的作用"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEditDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleEditTask" :loading="editing">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -236,6 +293,8 @@ import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import {
   Plus,
   Refresh,
+  Search,
+  RefreshLeft,
   VideoPlay,
   Edit,
   Document,
@@ -249,20 +308,24 @@ import {
   getTaskStats,
   toggleTask as toggleTaskApi,
   triggerTask,
+  updateTask as updateTaskApi,
+  createTask as createTaskApi,
   type ScheduledTask
 } from '@/api/scheduledTasks'
-import { getConfigList, updateConfig } from '@/api/config'
+import { getAIConfigs, updateApiKeys as updateApiKeysApi } from '@/api/keepalive'
+import type { SystemConfig } from '@/api/keepalive'
+import type { TaskStats } from '@/api/scheduledTasks'
 
 // ============ 响应式数据 ============
 const allTasks = ref<ScheduledTask[]>([])
-const stats = ref({
+const stats = ref<TaskStats>({
   totalTasks: 0,
   enabledTasks: 0,
   todayTotal: 0,
   successRate: '0',
   totalSuccess: 0,
   totalFailed: 0,
-  byType: {} as Record<string, number>
+  byType: {}
 })
 
 const filters = ref({
@@ -272,8 +335,11 @@ const filters = ref({
 })
 
 const showCreateDialog = ref(false)
+const showEditDialog = ref(false)
 const creating = ref(false)
+const editing = ref(false)
 const createFormRef = ref<FormInstance>()
+const editFormRef = ref<FormInstance>()
 
 const createForm = ref({
   taskName: '',
@@ -287,6 +353,21 @@ const createRules = {
   taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
   taskType: [{ required: true, message: '请选择任务类型', trigger: 'change' }],
   platformCode: [{ required: true, message: '请选择关联平台', trigger: 'change' }],
+  cronExpression: [{ required: true, message: '请输入Cron表达式', trigger: 'blur' }],
+  description: [{ required: true, message: '请输入任务描述', trigger: 'blur' }]
+}
+
+const editForm = ref({
+  taskCode: '',
+  taskName: '',
+  taskType: '',
+  platformCode: '',
+  cronExpression: '',
+  description: ''
+})
+
+const editRules = {
+  taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
   cronExpression: [{ required: true, message: '请输入Cron表达式', trigger: 'blur' }],
   description: [{ required: true, message: '请输入任务描述', trigger: 'blur' }]
 }
@@ -326,21 +407,43 @@ const loadData = async () => {
       getTaskStats()
     ])
 
-    allTasks.value = tasksData
-    stats.value = statsData
+    // 确保数据是数组
+    allTasks.value = Array.isArray(tasksData) ? tasksData : []
+
+    // 确保统计数据是对象且有默认值
+    stats.value = {
+      totalTasks: statsData?.totalTasks ?? 0,
+      enabledTasks: statsData?.enabledTasks ?? 0,
+      todayTotal: statsData?.todayTotal ?? 0,
+      successRate: statsData?.successRate ?? '0',
+      totalSuccess: statsData?.totalSuccess ?? 0,
+      totalFailed: statsData?.totalFailed ?? 0,
+      byType: statsData?.byType ?? {}
+    }
 
     // 加载 API Keys 配置
     await loadApiKeys()
   } catch (error) {
     console.error('加载数据失败:', error)
     ElMessage.error('加载失败')
+    // 出错时设置默认值
+    allTasks.value = []
+    stats.value = {
+      totalTasks: 0,
+      enabledTasks: 0,
+      todayTotal: 0,
+      successRate: '0',
+      totalSuccess: 0,
+      totalFailed: 0,
+      byType: {}
+    }
   }
 }
 
 const loadApiKeys = async () => {
   try {
-    const configs = await getConfigList()
-    configs.forEach(config => {
+    const configs = await getAIConfigs()
+    configs.forEach((config: SystemConfig) => {
       if (config.configKey === 'ai.zhipu.keys') {
         apiKeysCache.zhipu = config.configValue
       } else if (config.configKey === 'ai.doubao.keys') {
@@ -348,12 +451,30 @@ const loadApiKeys = async () => {
       }
     })
   } catch (error) {
-    console.error('加载API Keys失败:', error)
+    console.error('加载API Keys配置失败，将不显示API Keys输入框')
+    // 不显示错误提示，因为API Keys不是必需的
   }
 }
 
 const applyFilters = () => {
-  // 筛选逻辑由 computed 属性自动处理
+  // 筛选逻辑由 computed 属性自动处理，这个方法保留用于手动触发
+}
+
+// 查询按钮
+const handleQuery = () => {
+  applyFilters()
+  ElMessage.success('查询已执行')
+}
+
+// 重置按钮
+const handleReset = () => {
+  filters.value = {
+    type: '',
+    status: '',
+    platform: ''
+  }
+  applyFilters()
+  ElMessage.info('筛选条件已重置')
 }
 
 const handleToggleTask = async (task: ScheduledTask, enabled: boolean) => {
@@ -370,18 +491,27 @@ const handleUpdateKeys = async (task: ScheduledTask) => {
   if (!task.platformCode) return
 
   try {
-    const configKey = `ai.${task.platformCode}.keys`
-    await updateConfig(configKey, apiKeysCache[task.platformCode])
-    ElMessage.success('API Keys 更新成功')
-  } catch (error) {
-    ElMessage.error('更新失败')
+    // 验证JSON格式
+    const keys = apiKeysCache[task.platformCode]
+    if (keys && keys.trim() !== '[]') {
+      JSON.parse(keys)
+    }
+
+    const result = await updateApiKeysApi(task.platformCode, keys)
+    if (result.code === 200) {
+      ElMessage.success('API Keys 更新成功')
+    } else {
+      ElMessage.error(result.message || 'API Keys 更新失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error?.message || 'JSON格式错误或更新失败')
   }
 }
 
 const handleCommand = async (command: string, task: ScheduledTask) => {
   switch (command) {
     case 'edit':
-      ElMessage.info('编辑功能开发中...')
+      await handleOpenEditDialog(task)
       break
     case 'trigger':
       await handleTriggerTask(task)
@@ -391,6 +521,59 @@ const handleCommand = async (command: string, task: ScheduledTask) => {
       window.location.href = `/admin/system-logs?platform=${task.platformCode}`
       break
   }
+}
+
+const handleOpenEditDialog = (task: ScheduledTask) => {
+  editForm.value = {
+    taskCode: task.taskCode,
+    taskName: task.taskName,
+    taskType: task.taskType,
+    platformCode: task.platformCode || '',
+    cronExpression: task.cronExpression,
+    description: task.description
+  }
+  showEditDialog.value = true
+}
+
+const handleEditTask = async () => {
+  try {
+    await editFormRef.value?.validate()
+    editing.value = true
+
+    const result = await updateTaskApi(editForm.value.taskCode, {
+      taskName: editForm.value.taskName,
+      cronExpression: editForm.value.cronExpression,
+      description: editForm.value.description,
+      executorParams: editForm.value.platformCode ? JSON.stringify({ platform: editForm.value.platformCode }) : undefined
+    })
+
+    if (result.code === 200) {
+      ElMessage.success('任务配置已更新')
+      showEditDialog.value = false
+      await loadData()
+    } else {
+      ElMessage.error(result.message || '更新失败')
+    }
+  } catch (error: any) {
+    if (error !== false) { // 表单验证失败时 error 为 false
+      console.error('更新任务失败:', error)
+      ElMessage.error(error?.message || '更新失败')
+    }
+  } finally {
+    editing.value = false
+  }
+}
+
+const resetEditForm = () => {
+  editForm.value = {
+    taskCode: '',
+    taskName: '',
+    taskType: '',
+    platformCode: '',
+    cronExpression: '',
+    description: ''
+  }
+  editFormRef.value?.resetFields()
 }
 
 const handleTriggerTask = async (task: ScheduledTask) => {
@@ -448,11 +631,34 @@ const handleCreateTask = async () => {
     await createFormRef.value?.validate()
     creating.value = true
 
-    // TODO: 调用创建任务接口
-    ElMessage.success('任务创建功能开发中...')
-    showCreateDialog.value = false
-  } catch (error) {
-    console.error('创建任务失败:', error)
+    // 自动生成任务代码
+    const taskCode = `${createForm.value.platformCode || 'custom'}_keepalive_${Date.now()}`
+
+    const result = await createTaskApi({
+      taskCode,
+      taskName: createForm.value.taskName,
+      taskType: createForm.value.taskType,
+      platformCode: createForm.value.platformCode,
+      cronExpression: createForm.value.cronExpression,
+      description: createForm.value.description,
+      enabled: 0, // 默认禁用
+      executorClass: 'keepAliveSchedulerService',
+      executorMethod: 'manualTrigger',
+      executorParams: JSON.stringify({ platform: createForm.value.platformCode })
+    })
+
+    if (result.code === 200) {
+      ElMessage.success('任务创建成功')
+      showCreateDialog.value = false
+      await loadData()
+    } else {
+      ElMessage.error(result.message || '创建失败')
+    }
+  } catch (error: any) {
+    if (error !== false) { // 表单验证失败时 error 为 false
+      console.error('创建任务失败:', error)
+      ElMessage.error(error?.message || '创建失败')
+    }
   } finally {
     creating.value = false
   }
