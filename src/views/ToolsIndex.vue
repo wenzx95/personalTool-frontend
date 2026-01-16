@@ -135,26 +135,15 @@ const categories = [
 
 const tools = ref<Tool[]>([
   {
-    id: 'json-formatter',
-    title: 'JSON格式化',
-    description: 'JSON数据格式化、验证和美化工具',
+    id: 'json-tools',
+    title: 'JSON工具集',
+    description: 'JSON格式化、校验、比对，支持大纲和完整两种比对模式',
     icon: DocumentCopy,
     category: 'formatter',
-    route: '/json',
+    route: '/tools/json',
     status: 'stable',
     color: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-    usage: '1.2k次'
-  },
-  {
-    id: 'json-comparator',
-    title: 'JSON比对',
-    description: '对比两个JSON数据的差异，高亮显示变化',
-    icon: DocumentCopy,
-    category: 'formatter',
-    route: '/tools/json-comparator',
-    status: 'beta',
-    color: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-    usage: '321次'
+    usage: '1.5k次'
   },
   {
     id: 'loan-calculator',

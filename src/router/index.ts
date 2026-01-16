@@ -80,15 +80,20 @@ const router = createRouter({
         },
         {
           path: 'tools/json',
-          name: 'JsonFormatter',
-          component: () => import('@/views/tools/JsonFormatter.vue'),
+          name: 'JsonTools',
+          component: () => import('@/views/tools/JsonTools.vue'),
           meta: { title: 'JSON工具', requiresAuth: false }
+        },
+        // 旧路由重定向（向后兼容）
+        {
+          path: 'tools/json-formatter',
+          name: 'JsonFormatter',
+          redirect: '/tools/json'
         },
         {
           path: 'tools/json-comparator',
           name: 'JsonComparator',
-          component: () => import('@/views/tools/JsonComparator.vue'),
-          meta: { title: 'JSON比对', requiresAuth: false }
+          redirect: '/tools/json'
         },
         {
           path: 'admin',

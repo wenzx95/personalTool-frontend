@@ -58,6 +58,23 @@ marketRequest.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // Handle 403 Forbidden - 通常表示未认证或token无效
+    if (error.response?.status === 403) {
+      ElMessage.error('访问被拒绝，请先登录')
+      // Clear token and user data
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      // Redirect to login (avoid redirecting from login page or tools pages)
+      const currentPath = router.currentRoute.value.path
+      if (currentPath !== '/login' && !currentPath.startsWith('/tools')) {
+        router.push({
+          path: '/login',
+          query: { redirect: currentPath }
+        })
+      }
+      return Promise.reject(error)
+    }
+
     // Handle 500 errors
     if (error.response?.status === 500) {
       ElMessage.error('服务器错误，请稍后重试')

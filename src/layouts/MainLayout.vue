@@ -128,13 +128,41 @@
 
           <el-breadcrumb separator="/">
             <el-breadcrumb-item
-              v-for="breadcrumb in breadcrumbs"
-              :key="breadcrumb.path"
-              :to="breadcrumb.path"
+              v-for="item in breadcrumbs"
+              :key="item.path"
+              :to="item.path"
             >
-              {{ breadcrumb.title }}
+              {{ item.title }}
             </el-breadcrumb-item>
           </el-breadcrumb>
+
+          <!-- JSON工具导航栏 - 仅在JSON工具页面显示 -->
+          <template v-if="route.path.startsWith('/tools/json')">
+            <div class="json-tools-header">
+              <div class="json-tools-title">
+                <el-icon class="title-icon"><Document /></el-icon>
+                <span>JSON工具</span>
+              </div>
+              <div class="json-tools-nav">
+                <div
+                  class="nav-item"
+                  :class="{ active: jsonToolActiveTab === 'formatter' }"
+                  @click="jsonToolActiveTab = 'formatter'"
+                >
+                  <el-icon><Document /></el-icon>
+                  <span>格式化</span>
+                </div>
+                <div
+                  class="nav-item"
+                  :class="{ active: jsonToolActiveTab === 'comparator' }"
+                  @click="jsonToolActiveTab = 'comparator'"
+                >
+                  <el-icon><Rank /></el-icon>
+                  <span>比对</span>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="header-right">
@@ -169,7 +197,13 @@
       <el-main class="main-content">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <component
+              :is="Component"
+              :ref="setJsonToolsRef"
+              :active-tab="jsonToolActiveTab"
+              @show-examples="handleShowExamples"
+              @clear-all="handleClearAll"
+            />
           </transition>
         </router-view>
 
@@ -205,7 +239,8 @@ import {
   DataAnalysis,
   DocumentCopy,
   Management as Calculator,
-  User
+  User,
+  Rank
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { APP_VERSION } from '@/version'
@@ -214,6 +249,41 @@ import request from '@/api/request'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+
+// JSON工具导航栏状态
+const jsonToolActiveTab = ref('formatter')
+
+// 事件emit函数
+const emit = defineEmits<{
+  showExamples: []
+  clearAll: []
+}>()
+
+// JSON工具组件ref
+let jsonToolsRef: any = null
+
+const setJsonToolsRef = (el: any) => {
+  if (el) {
+    // 检查是否是JsonTools组件
+    if (el.showExamples && el.clearAll) {
+      jsonToolsRef = el
+    }
+  }
+}
+
+// 处理显示示例数据事件
+const handleShowExamples = () => {
+  if (jsonToolsRef && typeof jsonToolsRef.showExamples === 'function') {
+    jsonToolsRef.showExamples()
+  }
+}
+
+// 处理清空内容事件
+const handleClearAll = () => {
+  if (jsonToolsRef && typeof jsonToolsRef.clearAll === 'function') {
+    jsonToolsRef.clearAll()
+  }
+}
 
 // 版本信息
 const frontendVersion = ref(`${APP_VERSION.buildDate} ${APP_VERSION.buildTimeShort}`)
@@ -274,8 +344,7 @@ const menuSections = ref<MenuSection[]>([
         icon: markRaw(Tools),
         children: [
           { key: 'tools/loan-calculator', label: '还贷计算器', icon: markRaw(Calculator) },
-          { key: 'tools/json', label: 'JSON工具', icon: markRaw(DocumentCopy) },
-          { key: 'tools/json-comparator', label: 'JSON比对', icon: markRaw(DocumentCopy) }
+          { key: 'tools/json', label: 'JSON工具', icon: markRaw(DocumentCopy) }
         ]
       }
     ]
@@ -322,12 +391,17 @@ const filteredMenuSections = computed(() => {
   return menuSections.value
 })
 
-const breadcrumbs = computed(() => {
+interface BreadcrumbItem {
+  path: string
+  title: string
+}
+
+const breadcrumbs = computed<BreadcrumbItem[]>(() => {
   const matched = route.matched.filter(item => item.meta && item.meta.title)
   return matched.map(item => ({
     path: item.path,
     title: item.meta.title as string
-  }))
+  })).filter(item => !(route.path.startsWith('/tools/json') && item.title === 'JSON工具'))
 })
 
 const isActive = (key: string) => {
@@ -696,6 +770,76 @@ const handleLogout = async () => {
 
 .sidebar-toggle {
   flex-shrink: 0;
+}
+
+/* JSON工具导航栏样式 */
+.json-tools-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+
+  .json-tools-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+
+    .title-icon {
+      font-size: 24px;
+      color: var(--color-primary);
+    }
+  }
+
+  .json-tools-nav {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    flex-shrink: 0;
+    align-self: stretch;
+    height: 100%;
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 16px;
+      height: 100%;
+      min-height: 44px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      user-select: none;
+
+      .el-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
+      span {
+        white-space: nowrap;
+      }
+
+      &:hover {
+        color: var(--color-primary);
+        background: var(--color-primary-lighter);
+      }
+
+      &.active {
+        color: var(--color-primary);
+        background: var(--color-primary-lighter);
+        font-weight: 500;
+      }
+    }
+  }
 }
 
 .search-input {

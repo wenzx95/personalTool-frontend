@@ -1,647 +1,1906 @@
 <template>
   <div class="json-comparator">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">JSON 比对工具</h1>
-        <p class="page-subtitle">对比两个 JSON 数据，高亮显示差异</p>
-      </div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <el-button-group>
-        <el-button type="primary" @click="compareJson">
-          <el-icon><Document /></el-icon>
-          比对
-        </el-button>
-        <el-button @click="clearAll">
-          <el-icon><Delete /></el-icon>
-          清空
-        </el-button>
-      </el-button-group>
-
-      <div class="toolbar-right">
-        <el-button @click="copyResult">
-          <el-icon><CopyDocument /></el-icon>
-          复制结果
-        </el-button>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Left Panel - Original JSON -->
-      <div class="panel left-panel">
+    <!-- ========== 编辑模式 ========== -->
+    <div v-if="mode === 'edit'" class="compare-mode edit-mode">
+      <!-- 案例列表面板 -->
+      <div class="panel cases-panel">
         <div class="panel-header">
-          <span class="panel-title">原始 JSON</span>
-          <el-tag v-if="isLeftValid" type="success" size="small">JSON 有效</el-tag>
-          <el-tag v-else-if="leftJson.trim()" type="danger" size="small">JSON 无效</el-tag>
-        </div>
-        <div class="panel-body input-body">
-          <el-input
-            v-model="leftJson"
-            type="textarea"
-            placeholder="在此粘贴或输入原始 JSON 字符串..."
-            @input="validateLeftJson"
-          />
-        </div>
-        <div v-if="leftErrorMessage" class="error-message">
-          <el-icon><Warning /></el-icon>
-          <span>{{ leftErrorMessage }}</span>
-        </div>
-      </div>
-
-      <!-- Center Panel - Differences -->
-      <div class="panel center-panel">
-        <div class="panel-header">
-          <span class="panel-title">差异</span>
-          <el-tag v-if="hasDifferences" type="warning" size="small">{{ differenceCount }} 处差异</el-tag>
-          <el-tag v-else-if="compared" type="success" size="small">完全一致</el-tag>
-        </div>
-        <div class="panel-body diff-body">
-          <div v-if="compared && !hasDifferences" class="no-differences">
-            <el-icon><Check /></el-icon>
-            <span>两个 JSON 完全一致</span>
+          <span class="panel-title">案例列表</span>
+          <!-- 案例源切换 -->
+          <div class="cases-source-switcher">
+            <el-button-group>
+              <el-button
+                :type="casesSource === 'local' ? 'primary' : ''"
+                @click="casesSource = 'local'"
+                size="small"
+              >
+                <el-icon><FolderOpened /></el-icon>
+                本地
+              </el-button>
+              <el-button
+                :type="casesSource === 'cloud' ? 'primary' : ''"
+                @click="casesSource = 'cloud'"
+                :disabled="!userStore.isLoggedIn"
+                size="small"
+              >
+                <el-icon><Cloudy /></el-icon>
+                云端
+              </el-button>
+            </el-button-group>
           </div>
-          <div v-else-if="differences.length > 0" class="diff-content">
+        </div>
+        <div class="panel-body cases-body">
+          <div v-if="currentCaseList.length === 0" class="empty-cases">
+            <el-icon><FolderOpened /></el-icon>
+            <span>暂无保存的案例</span>
+          </div>
+          <div v-else class="cases-list">
             <div
-              v-for="(diff, index) in differences"
-              :key="index"
-              class="diff-item"
-              :class="getDiffTypeClass(diff.type)"
+              v-for="caseItem in currentCaseList"
+              :key="casesSource === 'local' ? caseItem.id : caseItem.id"
+              :class="['case-item', { active: selectedCaseId === (casesSource === 'local' ? caseItem.id : caseItem.id) }]"
+              @click="loadCase(caseItem)"
             >
-              <div class="diff-type">
-                <el-icon v-if="diff.type === 'added'"><Plus /></el-icon>
-                <el-icon v-if="diff.type === 'removed'"><Minus /></el-icon>
-                <el-icon v-if="diff.type === 'modified'"><Edit /></el-icon>
-                {{ getDiffTypeText(diff.type) }}
+              <div class="case-item-content">
+                <el-icon class="case-icon"><Document /></el-icon>
+                <el-tooltip :content="caseItem.name" placement="top" :show-after="500">
+                  <span class="case-name">{{ caseItem.name }}</span>
+                </el-tooltip>
               </div>
-              <div class="diff-path">{{ diff.path }}</div>
-              <div v-if="diff.type === 'added'" class="diff-value">
-                <span class="label">新增值：</span>
-                <span class="value">{{ stringifyValue(diff.newValue) }}</span>
-              </div>
-              <div v-if="diff.type === 'removed'" class="diff-value">
-                <span class="label">删除值：</span>
-                <span class="value">{{ stringifyValue(diff.oldValue) }}</span>
-              </div>
-              <div v-if="diff.type === 'modified'" class="diff-value">
-                <span class="label">旧值：</span>
-                <span class="value old-value">{{ stringifyValue(diff.oldValue) }}</span>
-                <span class="label">新值：</span>
-                <span class="value new-value">{{ stringifyValue(diff.newValue) }}</span>
+              <div class="case-item-actions">
+                <!-- 本地案例操作 -->
+                <template v-if="casesSource === 'local'">
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="localToCloud(caseItem)"
+                    :disabled="!userStore.isLoggedIn"
+                    title="保存到云端"
+                  >
+                    <el-icon><Upload /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="updateCase(caseItem.id)"
+                    title="更新"
+                  >
+                    <el-icon><FolderAdd /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="renameCase(caseItem.id)"
+                    title="重命名"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="deleteLocalCase(caseItem.id)"
+                    title="删除"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+                <!-- 云端案例操作 -->
+                <template v-if="casesSource === 'cloud'">
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="cloudToLocal(caseItem)"
+                    title="保存到本地"
+                  >
+                    <el-icon><Download /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="updateCase(caseItem.id)"
+                    title="更新"
+                  >
+                    <el-icon><FolderAdd /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="renameCase(caseItem.id)"
+                    title="重命名"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="deleteCloudCase(caseItem.id)"
+                    title="删除"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
               </div>
             </div>
           </div>
-          <div v-else class="empty-diff">
-            <el-icon><Document /></el-icon>
-            <span>点击"比对"按钮查看差异</span>
-          </div>
         </div>
       </div>
 
-      <!-- Right Panel - Modified JSON -->
-      <div class="panel right-panel">
-        <div class="panel-header">
-          <span class="panel-title">修改后的 JSON</span>
-          <el-tag v-if="isRightValid" type="success" size="small">JSON 有效</el-tag>
-          <el-tag v-else-if="rightJson.trim()" type="danger" size="small">JSON 无效</el-tag>
+      <!-- 主内容区 -->
+      <div class="main-content">
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <el-button-group>
+            <el-button @click="saveCase" :disabled="!canCompare">
+              <el-icon><FolderAdd /></el-icon>
+              保存案例
+            </el-button>
+            <el-button @click="updateSelectedCase" :disabled="!selectedCaseId || !canCompare">
+              <el-icon><Document /></el-icon>
+              更新案例
+            </el-button>
+            <el-button @click="clearAll">
+              <el-icon><Delete /></el-icon>
+              清空
+            </el-button>
+          </el-button-group>
+
+          <div class="toolbar-spacer"></div>
+
+          <el-button
+            type="primary"
+            @click="startCompare"
+            :disabled="!canCompare"
+          >
+            <el-icon><Document /></el-icon>
+            开始比对
+          </el-button>
         </div>
-        <div class="panel-body input-body">
-          <el-input
-            v-model="rightJson"
-            type="textarea"
-            placeholder="在此粘贴或输入修改后的 JSON 字符串..."
-            @input="validateRightJson"
-          />
+
+        <!-- 左右输入面板 -->
+        <div class="compare-panels">
+        <!-- 左侧输入 -->
+        <div class="panel left-panel">
+          <div class="panel-header">
+            <!-- 标题编辑 -->
+            <el-input
+              v-if="leftTitleEditing"
+              v-model="leftTitleInput"
+              size="small"
+              @blur="finishLeftTitleEdit"
+              @keyup.enter="finishLeftTitleEdit"
+              @keyup.esc="cancelLeftTitleEdit"
+              ref="leftTitleInputRef"
+            />
+            <div v-else class="panel-title-wrapper" @dblclick="startLeftTitleEdit">
+              <span class="panel-title">{{ fullLeftTitle }}</span>
+              <el-icon class="edit-icon"><Edit /></el-icon>
+            </div>
+            <!-- 验证标签 -->
+            <el-tag v-if="isLeftValid" type="success" size="small">有效</el-tag>
+            <el-tag v-else-if="leftJson" type="danger" size="small">无效</el-tag>
+          </div>
+          <div class="panel-body">
+            <el-input
+              v-model="leftJson"
+              type="textarea"
+              :rows="20"
+              placeholder="粘贴或输入左侧 JSON..."
+              @input="validateJson('left')"
+            />
+          </div>
+          <div v-if="leftErrorMessage" class="error-message">
+            <el-icon><Warning /></el-icon>
+            <span>{{ leftErrorMessage }}</span>
+          </div>
         </div>
-        <div v-if="rightErrorMessage" class="error-message">
-          <el-icon><Warning /></el-icon>
-          <span>{{ rightErrorMessage }}</span>
+
+        <!-- 右侧输入 -->
+        <div class="panel right-panel">
+          <div class="panel-header">
+            <!-- 标题编辑 -->
+            <el-input
+              v-if="rightTitleEditing"
+              v-model="rightTitleInput"
+              size="small"
+              @blur="finishRightTitleEdit"
+              @keyup.enter="finishRightTitleEdit"
+              @keyup.esc="cancelRightTitleEdit"
+              ref="rightTitleInputRef"
+            />
+            <div v-else class="panel-title-wrapper" @dblclick="startRightTitleEdit">
+              <span class="panel-title">{{ fullRightTitle }}</span>
+              <el-icon class="edit-icon"><Edit /></el-icon>
+            </div>
+            <!-- 验证标签 -->
+            <el-tag v-if="isRightValid" type="success" size="small">有效</el-tag>
+            <el-tag v-else-if="rightJson" type="danger" size="small">无效</el-tag>
+          </div>
+          <div class="panel-body">
+            <el-input
+              v-model="rightJson"
+              type="textarea"
+              :rows="20"
+              placeholder="粘贴或输入右侧 JSON..."
+              @input="validateJson('right')"
+            />
+          </div>
+          <div v-if="rightErrorMessage" class="error-message">
+            <el-icon><Warning /></el-icon>
+            <span>{{ rightErrorMessage }}</span>
+          </div>
+        </div>
         </div>
       </div>
     </div>
 
-    <!-- Options -->
-    <div class="options-section">
-      <el-space>
-        <span class="option-label">显示格式：</span>
-        <el-radio-group v-model="displayFormat" size="small">
-          <el-radio-button :label="'tree'">树形视图</el-radio-button>
-          <el-radio-button :label="'text'">文本视图</el-radio-button>
-        </el-radio-group>
-      </el-space>
+    <!-- ========== 对比模式 ========== -->
+    <div v-else class="compare-mode compare-view">
+      <!-- 案例列表面板 -->
+      <div class="panel cases-panel">
+        <div class="panel-header">
+          <span class="panel-title">案例列表</span>
+          <!-- 案例源切换 -->
+          <div class="cases-source-switcher">
+            <el-button-group>
+              <el-button
+                :type="casesSource === 'local' ? 'primary' : ''"
+                @click="casesSource = 'local'"
+                size="small"
+              >
+                <el-icon><FolderOpened /></el-icon>
+                本地
+              </el-button>
+              <el-button
+                :type="casesSource === 'cloud' ? 'primary' : ''"
+                @click="casesSource = 'cloud'"
+                :disabled="!userStore.isLoggedIn"
+                size="small"
+              >
+                <el-icon><Cloudy /></el-icon>
+                云端
+              </el-button>
+            </el-button-group>
+          </div>
+        </div>
+        <div class="panel-body cases-body">
+          <div v-if="currentCaseList.length === 0" class="empty-cases">
+            <el-icon><FolderOpened /></el-icon>
+            <span>暂无保存的案例</span>
+          </div>
+          <div v-else class="cases-list">
+            <div
+              v-for="caseItem in currentCaseList"
+              :key="casesSource === 'local' ? caseItem.id : caseItem.id"
+              :class="['case-item', { active: selectedCaseId === (casesSource === 'local' ? caseItem.id : caseItem.id) }]"
+              @click="loadCase(caseItem)"
+            >
+              <div class="case-item-content">
+                <el-icon class="case-icon"><Document /></el-icon>
+                <el-tooltip :content="caseItem.name" placement="top" :show-after="500">
+                  <span class="case-name">{{ caseItem.name }}</span>
+                </el-tooltip>
+              </div>
+              <div class="case-item-actions">
+                <!-- 本地案例操作 -->
+                <template v-if="casesSource === 'local'">
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="localToCloud(caseItem)"
+                    :disabled="!userStore.isLoggedIn"
+                    title="保存到云端"
+                  >
+                    <el-icon><Upload /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="updateCase(caseItem.id)"
+                    title="更新"
+                  >
+                    <el-icon><FolderAdd /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="renameCase(caseItem.id)"
+                    title="重命名"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="deleteLocalCase(caseItem.id)"
+                    title="删除"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+                <!-- 云端案例操作 -->
+                <template v-if="casesSource === 'cloud'">
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="cloudToLocal(caseItem)"
+                    title="保存到本地"
+                  >
+                    <el-icon><Download /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="updateCase(caseItem.id)"
+                    title="更新"
+                  >
+                    <el-icon><FolderAdd /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="renameCase(caseItem.id)"
+                    title="重命名"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="deleteCloudCase(caseItem.id)"
+                    title="删除"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主内容区 -->
+      <div class="main-content">
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <el-button-group>
+            <el-button @click="mode = 'edit'" icon="Edit">返回编辑</el-button>
+            <el-button @click="saveCase" :disabled="!canCompare">
+              <el-icon><FolderAdd /></el-icon>
+              保存案例
+            </el-button>
+            <el-button @click="updateSelectedCase" :disabled="!selectedCaseId || !canCompare">
+              <el-icon><Document /></el-icon>
+              更新案例
+            </el-button>
+            <el-button @click="clearAll" icon="Delete">清空</el-button>
+          </el-button-group>
+
+          <el-divider direction="vertical" />
+
+          <el-button-group>
+            <el-button
+              :type="compareMode === 'outline' ? 'primary' : ''"
+              @click="compareMode = 'outline'"
+            >
+              大纲比对
+            </el-button>
+            <el-button
+              :type="compareMode === 'full' ? 'primary' : ''"
+              @click="compareMode = 'full'"
+            >
+              完整比对
+            </el-button>
+          </el-button-group>
+
+          <div class="toolbar-spacer"></div>
+
+          <div v-if="compareResult" class="diff-summary">
+            <el-tag v-if="compareResult.diffCount > 0" type="warning" size="large">
+              差异: {{ compareResult.diffCount }} 处
+            </el-tag>
+            <el-tag v-else type="success" size="large">
+              完全一致
+            </el-tag>
+          </div>
+
+          <!-- 差异导航 -->
+          <div v-if="compareResult && compareResult.diffCount > 0" class="diff-navigation">
+            <el-button-group>
+              <el-button @click="navigateDiff(-1)" icon="ArrowUp">上一个</el-button>
+            </el-button-group>
+
+            <div class="diff-page-wrapper">
+              <el-input
+                v-if="isEditingPage"
+                ref="pageInputRef"
+                v-model="pageInputValue"
+                class="diff-page-input"
+                type="number"
+                :min="1"
+                :max="compareResult.diffCount"
+                @blur="finishPageEdit"
+                @keyup.enter="finishPageEdit"
+                @keyup.esc="cancelPageEdit"
+              />
+              <el-button v-else @click="startPageEdit" class="diff-page-button">
+                {{ currentDiffIndex + 1 }} / {{ compareResult.diffCount }}
+              </el-button>
+            </div>
+
+            <el-button-group>
+              <el-button @click="navigateDiff(1)" icon="ArrowDown">下一个</el-button>
+            </el-button-group>
+          </div>
+
+          <!-- 对齐按钮 -->
+          <el-button @click="alignPanels" icon="Operation">对齐</el-button>
+        </div>
+
+        <!-- 双栏对比视图 -->
+        <div class="compare-panels">
+          <!-- 左侧视图（基准） -->
+          <div class="panel left-panel">
+            <div class="panel-header">
+              <span class="panel-title">{{ fullLeftTitle }}</span>
+            </div>
+            <div
+              class="panel-body"
+              ref="leftPanelRef"
+              @scroll="handleLeftScroll"
+            >
+              <JsonCompareTree
+                v-if="compareResult"
+                :data="compareResult.leftTree"
+                :diffs="compareResult.diffs"
+                :side="'left'"
+                @diff-click="handleDiffClick"
+              />
+              <div v-else class="empty-state">
+                <el-icon><Document /></el-icon>
+                <span>暂无数据</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右侧视图（对比） -->
+          <div class="panel right-panel">
+            <div class="panel-header">
+              <span class="panel-title">{{ fullRightTitle }}</span>
+            </div>
+            <div
+              class="panel-body"
+              ref="rightPanelRef"
+              @scroll="handleRightScroll"
+            >
+              <JsonCompareTree
+                v-if="compareResult"
+                :data="compareResult.rightTree"
+                :diffs="compareResult.diffs"
+                :side="'right'"
+                @diff-click="handleDiffClick"
+              />
+              <div v-else class="empty-state">
+                <el-icon><Document /></el-icon>
+                <span>暂无数据</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 图例 -->
+    <div v-if="mode === 'compare'" class="legend">
+      <div class="legend-item">
+        <span class="legend-color diff-added"></span>
+        <span>新增（右边有）</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color diff-removed"></span>
+        <span>删除（右边没有）</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color diff-modified"></span>
+        <span>修改（值不同）</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color diff-key-changed"></span>
+        <span>Key 变化</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color diff-missing"></span>
+        <span>缺失（左边没有）</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document,
-  Delete,
-  CopyDocument,
   Warning,
-  Check,
-  Plus,
-  Minus,
-  Edit
+  Edit,
+  FolderAdd,
+  Delete,
+  FolderOpened,
+  Cloudy,
+  Upload,
+  Download
 } from '@element-plus/icons-vue'
+import JsonCompareTree from '@/components/JsonCompareTree.vue'
+import {
+  compareJson,
+  validateJson as validateJsonUtil,
+  type CompareResult,
+  type DiffItem
+} from '@/utils/jsonComparator'
+import { useUserStore } from '@/stores/user'
+import { useUserData } from '@/hooks/useUserData'
 
-// ========== State ==========
+// 用户状态管理
+const userStore = useUserStore()
+
+// 通用数据管理 Hook（云端）
+const {
+  dataList: cloudCases,
+  loadDataList: loadCloudCases,
+  saveData,
+  updateData: updateCloudData,
+  deleteData: deleteCloudData
+} = useUserData('json-comparator')
+
+// ========== 案例管理接口定义 ==========
+interface ComparatorSavedCase {
+  id: string | number
+  name: string
+  leftTitle?: string
+  rightTitle?: string
+  leftJson?: string
+  rightJson?: string
+  compareMode?: 'outline' | 'full'
+  createdAt?: number
+  createTime?: string
+  data?: any
+}
+
+// ========== 状态管理 ==========
+// 模式：edit | compare
+const mode = ref<'edit' | 'compare'>('edit')
+
+// 编辑模式数据
 const leftJson = ref('')
 const rightJson = ref('')
-const leftErrorMessage = ref('')
-const rightErrorMessage = ref('')
+const leftTitle = ref('左侧 JSON')
+const rightTitle = ref('右侧 JSON')
+const LEFT_SUFFIX = '（基准）'
+const RIGHT_SUFFIX = '（比对）'
+
+// 标题编辑状态
+const leftTitleEditing = ref(false)
+const rightTitleEditing = ref(false)
+const leftTitleInput = ref('')
+const rightTitleInput = ref('')
+const leftTitleInputRef = ref<HTMLInputElement>()
+const rightTitleInputRef = ref<HTMLInputElement>()
+
+// 计算完整标题
+const fullLeftTitle = computed(() => `${leftTitle.value}${LEFT_SUFFIX}`)
+const fullRightTitle = computed(() => `${rightTitle.value}${RIGHT_SUFFIX}`)
+
+// 验证状态
 const isLeftValid = ref(false)
 const isRightValid = ref(false)
-const differences = ref<any[]>([])
-const compared = ref(false)
-const displayFormat = ref('tree')
+const leftErrorMessage = ref('')
+const rightErrorMessage = ref('')
 
-// ========== Utilities ==========
-const parseInput = (input: string): any => {
-  try {
-    return JSON.parse(input)
-  } catch {
-    try {
-      return new Function('return ' + input)()
-    } catch {
-      throw new Error('无效的 JSON/JavaScript 对象格式')
+// 对比模式数据
+const compareResult = ref<CompareResult | null>(null)
+const compareMode = ref<'outline' | 'full'>('outline')
+
+// 滚动同步引用
+const leftPanelRef = ref<HTMLElement>()
+const rightPanelRef = ref<HTMLElement>()
+
+// 差异导航
+const currentDiffIndex = ref(-1)
+const isEditingPage = ref(false)
+const pageInputValue = ref('')
+const pageInputRef = ref<HTMLInputElement>()
+
+// 案例管理
+const LOCAL_STORAGE_KEY = 'json-comparator-cases'
+const localCases = ref<ComparatorSavedCase[]>([])
+const casesSource = ref<'local' | 'cloud'>('local')
+const selectedCaseId = ref<string | number | null>(null)
+
+// 当前案例列表（根据案例源切换）
+const currentCaseList = computed(() => {
+  return casesSource.value === 'local' ? localCases.value : cloudCases.value
+})
+
+
+// ========== 计算属性 ==========
+const canCompare = computed(() => {
+  return isLeftValid.value && isRightValid.value
+})
+
+// ========== 验证 JSON ==========
+const validateJson = (side: 'left' | 'right') => {
+  const json = side === 'left' ? leftJson.value : rightJson.value
+
+  if (!json.trim()) {
+    if (side === 'left') {
+      isLeftValid.value = false
+      leftErrorMessage.value = ''
+    } else {
+      isRightValid.value = false
+      rightErrorMessage.value = ''
     }
-  }
-}
-
-const stringifyValue = (value: any): string => {
-  return JSON.stringify(value, null, 2)
-}
-
-// ========== Validation ==========
-const validateLeftJson = () => {
-  if (!leftJson.value.trim()) {
-    isLeftValid.value = false
-    leftErrorMessage.value = ''
     return false
   }
 
-  try {
-    parseInput(leftJson.value)
-    isLeftValid.value = true
-    leftErrorMessage.value = ''
-    return true
-  } catch (error: any) {
-    isLeftValid.value = false
-    leftErrorMessage.value = error.message
-    return false
+  const isValid = validateJsonUtil(json)
+
+  if (side === 'left') {
+    isLeftValid.value = isValid
+    leftErrorMessage.value = isValid ? '' : 'JSON 格式无效，请检查'
+  } else {
+    isRightValid.value = isValid
+    rightErrorMessage.value = isValid ? '' : 'JSON 格式无效，请检查'
   }
+
+  return isValid
 }
 
-const validateRightJson = () => {
-  if (!rightJson.value.trim()) {
-    isRightValid.value = false
-    rightErrorMessage.value = ''
-    return false
-  }
-
-  try {
-    parseInput(rightJson.value)
-    isRightValid.value = true
-    rightErrorMessage.value = ''
-    return true
-  } catch (error: any) {
-    isRightValid.value = false
-    rightErrorMessage.value = error.message
-    return false
-  }
-}
-
-// ========== Comparison ==========
-const compareJson = () => {
-  if (!validateLeftJson() || !validateRightJson()) {
-    ElMessage.warning('请检查 JSON 格式')
+// ========== 开始比对 ==========
+const startCompare = () => {
+  if (!canCompare.value) {
+    ElMessage.warning('请确保两个 JSON 都有效')
     return
   }
 
   try {
-    const leftData = parseInput(leftJson.value)
-    const rightData = parseInput(rightJson.value)
-    differences.value = compareObjects(leftData, rightData)
-    compared.value = true
-    ElMessage.success('比对成功')
+    const leftData = JSON.parse(leftJson.value)
+    const rightData = JSON.parse(rightJson.value)
+
+    // 执行比对
+    compareResult.value = compareJson(leftData, rightData, compareMode.value)
+
+    // 重置滚动偏移量
+    scrollOffset = 0
+
+    // 切换到对比模式
+    mode.value = 'compare'
+
+    ElMessage.success(`比对完成，发现 ${compareResult.value.diffCount} 处差异`)
   } catch (error: any) {
     ElMessage.error('比对失败: ' + error.message)
   }
 }
 
-const compareObjects = (obj1: any, obj2: any, path: string = ''): any[] => {
-  const diffs: any[] = []
-
-  // 检查类型是否相同
-  if (typeof obj1 !== typeof obj2) {
-    diffs.push({
-      type: 'modified',
-      path: path,
-      oldValue: obj1,
-      newValue: obj2
-    })
-    return diffs
-  }
-
-  // 检查是否为数组
-  if (Array.isArray(obj1) && Array.isArray(obj2)) {
-    // 比较数组长度
-    if (obj1.length !== obj2.length) {
-      diffs.push({
-        type: 'modified',
-        path: path,
-        oldValue: obj1,
-        newValue: obj2
-      })
-    } else {
-      // 比较数组元素
-      for (let i = 0; i < obj1.length; i++) {
-        const itemPath = path ? `${path}[${i}]` : `[${i}]`
-        diffs.push(...compareObjects(obj1[i], obj2[i], itemPath))
-      }
-    }
-    return diffs
-  }
-
-  // 检查是否为对象
-  if (obj1 !== null && typeof obj1 === 'object' && obj2 !== null && typeof obj2 === 'object') {
-    const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)])
-    for (const key of allKeys) {
-      const itemPath = path ? `${path}.${key}` : key
-      if (key in obj1 && key in obj2) {
-        diffs.push(...compareObjects(obj1[key], obj2[key], itemPath))
-      } else if (key in obj1) {
-        diffs.push({
-          type: 'removed',
-          path: itemPath,
-          oldValue: obj1[key]
-        })
-      } else {
-        diffs.push({
-          type: 'added',
-          path: itemPath,
-          newValue: obj2[key]
-        })
-      }
-    }
-    return diffs
-  }
-
-  // 比较原始值
-  if (obj1 !== obj2) {
-    diffs.push({
-      type: 'modified',
-      path: path,
-      oldValue: obj1,
-      newValue: obj2
-    })
-  }
-
-  return diffs
-}
-
-const getDiffTypeClass = (type: string): string => {
-  switch (type) {
-    case 'added':
-      return 'diff-added'
-    case 'removed':
-      return 'diff-removed'
-    case 'modified':
-      return 'diff-modified'
-    default:
-      return ''
-  }
-}
-
-const getDiffTypeText = (type: string): string => {
-  switch (type) {
-    case 'added':
-      return '新增'
-    case 'removed':
-      return '删除'
-    case 'modified':
-      return '修改'
-    default:
-      return '未知'
-  }
-}
-
-// ========== Actions ==========
+// ========== 清空所有 ==========
 const clearAll = () => {
   leftJson.value = ''
   rightJson.value = ''
-  leftErrorMessage.value = ''
-  rightErrorMessage.value = ''
   isLeftValid.value = false
   isRightValid.value = false
-  differences.value = []
-  compared.value = false
+  leftErrorMessage.value = ''
+  rightErrorMessage.value = ''
+  compareResult.value = null
+  currentDiffIndex.value = -1
+  scrollOffset = 0  // 重置滚动偏移量
+  mode.value = 'edit'
 }
 
-const copyResult = async () => {
-  if (!compared.value) {
-    ElMessage.warning('没有可复制的内容')
+// ========== 联动滚动 ==========
+let isScrolling = false
+let scrollOffset = 0  // 记录左右两边的滚动偏移量
+
+const handleLeftScroll = (event: Event) => {
+  if (isScrolling) return
+
+  const target = event.target as HTMLElement
+  const scrollTop = target.scrollTop
+  const scrollLeft = target.scrollLeft
+
+  isScrolling = true
+
+  // 同步到右侧 - 考虑偏移量
+  if (rightPanelRef.value) {
+    rightPanelRef.value.scrollTop = scrollTop + scrollOffset
+    rightPanelRef.value.scrollLeft = scrollLeft
+  }
+
+  setTimeout(() => {
+    isScrolling = false
+  }, 50)
+}
+
+const handleRightScroll = (event: Event) => {
+  if (isScrolling) return
+
+  const target = event.target as HTMLElement
+  const scrollTop = target.scrollTop
+  const scrollLeft = target.scrollLeft
+
+  isScrolling = true
+
+  // 同步到左侧 - 考虑偏移量
+  if (leftPanelRef.value) {
+    leftPanelRef.value.scrollTop = scrollTop - scrollOffset
+    leftPanelRef.value.scrollLeft = scrollLeft
+  }
+
+  setTimeout(() => {
+    isScrolling = false
+  }, 50)
+}
+
+// ========== 手动对齐 ==========
+const alignPanels = () => {
+  // 找到左边可视区域中心的节点
+  const leftNodes = document.querySelectorAll('[data-side="left"]') as NodeListOf<HTMLElement>
+  let centerNode: HTMLElement | null = null
+  let minDistance = Infinity
+
+  const leftContainerRect = leftPanelRef.value?.getBoundingClientRect()
+  if (!leftContainerRect) return
+
+  const centerY = leftContainerRect.top + leftContainerRect.height / 2
+
+  leftNodes.forEach(node => {
+    const rect = node.getBoundingClientRect()
+    const distance = Math.abs(rect.top - centerY)
+    if (distance < minDistance) {
+      minDistance = distance
+      centerNode = node
+    }
+  })
+
+  if (!centerNode) return
+
+  // 类型断言，因为我们已经检查过 centerNode 不为 null 了
+  const safeCenterNode = centerNode as HTMLElement
+
+  // 获取该节点的 path
+  const path = safeCenterNode.getAttribute('data-path')
+  if (!path) return
+
+  // 在右边找到相同 path 的节点
+  const rightNode = document.querySelector(`[data-side="right"][data-path="${path}"]`) as HTMLElement
+  if (!rightNode) {
+    ElMessage.warning('右侧没有找到对应的内容')
     return
   }
 
-  const result = differences.value.map(diff => {
-    return `${getDiffTypeText(diff.type)} ${diff.path} ${stringifyValue(diff.oldValue)} ${stringifyValue(diff.newValue)}`
-  }).join('\n')
+  // 高亮显示对齐的节点
+  document.querySelectorAll('.align-highlight').forEach(el => {
+    el.classList.remove('align-highlight')
+  })
+  safeCenterNode.classList.add('align-highlight')
+  rightNode.classList.add('align-highlight')
 
-  try {
-    await navigator.clipboard.writeText(result)
-    ElMessage.success('已复制到剪贴板')
-  } catch {
-    const textarea = document.createElement('textarea')
-    textarea.value = result
-    textarea.style.position = 'fixed'
-    textarea.style.opacity = '0'
-    document.body.appendChild(textarea)
-    textarea.select()
+  // 临时禁用滚动同步，避免互相干扰
+  isScrolling = true
 
-    try {
-      document.execCommand('copy')
-      ElMessage.success('已复制到剪贴板')
-    } catch {
-      ElMessage.error('复制失败')
+  // 使用 requestAnimationFrame 确保两个滚动同时执行，并使用 instant 行为确保准确性
+  requestAnimationFrame(() => {
+    safeCenterNode.scrollIntoView({
+      behavior: 'instant',
+      block: 'center',
+      inline: 'nearest'
+    })
+
+    rightNode.scrollIntoView({
+      behavior: 'instant',
+      block: 'center',
+      inline: 'nearest'
+    })
+  })
+
+  // 等待滚动完成后，计算并记录偏移量
+  setTimeout(() => {
+    if (leftPanelRef.value && rightPanelRef.value) {
+      // 记录两边的滚动偏移量
+      scrollOffset = rightPanelRef.value.scrollTop - leftPanelRef.value.scrollTop
+      console.log('对齐完成，滚动偏移量:', scrollOffset)
     }
 
-    document.body.removeChild(textarea)
+    // 恢复滚动同步
+    isScrolling = false
+  }, 100)
+
+  // 2秒后移除高亮
+  setTimeout(() => {
+    centerNode?.classList.remove('align-highlight')
+    rightNode?.classList.remove('align-highlight')
+  }, 2000)
+}
+
+// ========== 智能定位 ==========
+const handleDiffClick = (diff: DiffItem) => {
+  // 移除之前的高亮
+  document.querySelectorAll('.diff-highlight').forEach(el => {
+    el.classList.remove('diff-highlight')
+  })
+
+  // 查找并高亮差异项
+  const leftElement = document.querySelector(`[data-path="${diff.path}"][data-side="left"]`) as HTMLElement
+  const rightElement = document.querySelector(`[data-path="${diff.path}"][data-side="right"]`) as HTMLElement
+
+  if (leftElement) leftElement.classList.add('diff-highlight')
+  if (rightElement) rightElement.classList.add('diff-highlight')
+
+  // 同时滚动到可见区域
+  // 禁用平滑滚动，使用 instant 让两个面板同时跳转
+  if (leftElement) {
+    leftElement.scrollIntoView({
+      behavior: 'instant',
+      block: 'center',
+      inline: 'nearest'
+    })
+  }
+
+  if (rightElement) {
+    rightElement.scrollIntoView({
+      behavior: 'instant',
+      block: 'center',
+      inline: 'nearest'
+    })
   }
 }
 
-// ========== Computed ==========
-const hasDifferences = computed(() => {
-  return differences.value.length > 0
+// ========== 差异导航 ==========
+const navigateDiff = (direction: number) => {
+  if (!compareResult.value || compareResult.value.diffs.length === 0) {
+    return
+  }
+
+  const diffs = compareResult.value.diffs
+  const count = diffs.length
+
+  // 计算新的索引
+  let newIndex = currentDiffIndex.value + direction
+
+  if (newIndex < 0) {
+    newIndex = count - 1  // 循环到最后一个
+  } else if (newIndex >= count) {
+    newIndex = 0  // 循环到第一个
+  }
+
+  currentDiffIndex.value = newIndex
+  const diff = diffs[newIndex]
+
+  // 触发点击定位
+  handleDiffClick(diff)
+}
+
+// 处理页码输入（未使用）
+// const handlePageChange = (value: number) => {
+//   if (!compareResult.value || compareResult.value.diffs.length === 0) {
+//     return
+//   }
+//
+//   // ElInputNumber 已经保证了值在 min 和 max 之间
+//   // 只需要将页码转换为索引（页码从1开始，索引从0开始）
+//   const newIndex = value - 1
+//   currentDiffIndex.value = newIndex
+//
+//   // 跳转到对应的差异
+//   const diff = compareResult.value.diffs[newIndex]
+//   handleDiffClick(diff)
+// }
+
+// 开始编辑页码
+const startPageEdit = () => {
+  isEditingPage.value = true
+  pageInputValue.value = String(currentDiffIndex.value + 1)
+  nextTick(() => {
+    pageInputRef.value?.focus()
+    pageInputRef.value?.select()
+  })
+}
+
+// 完成编辑页码
+const finishPageEdit = () => {
+  if (!compareResult.value || compareResult.value.diffs.length === 0) {
+    isEditingPage.value = false
+    return
+  }
+
+  const inputPage = parseInt(pageInputValue.value)
+  if (isNaN(inputPage)) {
+    isEditingPage.value = false
+    return
+  }
+
+  // 限制范围在 1 ~ diffCount 之间
+  const maxPage = compareResult.value.diffCount
+  const validPage = Math.max(1, Math.min(inputPage, maxPage))
+
+  // 跳转到对应的差异
+  const newIndex = validPage - 1
+  currentDiffIndex.value = newIndex
+  const diff = compareResult.value.diffs[newIndex]
+  handleDiffClick(diff)
+
+  isEditingPage.value = false
+}
+
+// 取消编辑页码
+const cancelPageEdit = () => {
+  isEditingPage.value = false
+}
+
+// ========== 监听比对模式变化 ==========
+watch(compareMode, () => {
+  // 重新执行比对
+  if (mode.value === 'compare' && leftJson.value && rightJson.value) {
+    try {
+      const leftData = JSON.parse(leftJson.value)
+      const rightData = JSON.parse(rightJson.value)
+      compareResult.value = compareJson(leftData, rightData, compareMode.value)
+    } catch (error: any) {
+      ElMessage.error('重新比对失败: ' + error.message)
+    }
+  }
 })
 
-const differenceCount = computed(() => {
-  return differences.value.length
+// ========== 示例数据 ==========
+const loadExample = () => {
+  const exampleLeft = {
+    "users": [
+      {
+        "id": 1,
+        "name": "张三",
+        "age": 25,
+        "email": "zhangsan@example.com"
+      },
+      {
+        "id": 2,
+        "name": "李四",
+        "age": 30
+      }
+    ],
+    "total": 2
+  }
+
+  const exampleRight = {
+    "users": [
+      {
+        "id": 1,
+        "name": "张三",
+        "age": 26,
+        "email": "zhangsan@example.com"
+      },
+      {
+        "id": 2,
+        "name": "李四",
+        "age": 30,
+        "phone": "13800138000"
+      },
+      {
+        "id": 3,
+        "name": "王五",
+        "age": 28
+      }
+    ],
+    "total": 3
+  }
+
+  leftJson.value = JSON.stringify(exampleLeft, null, 2)
+  rightJson.value = JSON.stringify(exampleRight, null, 2)
+
+  // 自动验证
+  validateJson('left')
+  validateJson('right')
+
+  ElMessage.success('已加载示例数据')
+}
+
+// ========== 本地案例管理 ==========
+const saveLocalCasesToStorage = () => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localCases.value))
+  } catch (error) {
+    console.error('保存本地案例失败:', error)
+    ElMessage.error('保存失败，可能是存储空间不足')
+  }
+}
+
+const loadLocalCasesFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (stored) {
+      localCases.value = JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error('加载本地案例失败:', error)
+  }
+}
+
+const saveLocalCase = () => {
+  if (!canCompare.value) {
+    ElMessage.warning('请先输入有效的 JSON')
+    return
+  }
+
+  const defaultName = `案例 ${localCases.value.length + 1}`
+
+  ElMessageBox.prompt('请输入案例名称', '保存案例', {
+    confirmButtonText: '保存',
+    cancelButtonText: '取消',
+    inputValue: defaultName,
+    inputPattern: /.+/,
+    inputErrorMessage: '案例名称不能为空'
+  }).then(({ value }) => {
+    const newCase: ComparatorSavedCase = {
+      id: Date.now().toString(),
+      name: value,
+      leftTitle: leftTitle.value,
+      rightTitle: rightTitle.value,
+      leftJson: leftJson.value,
+      rightJson: rightJson.value,
+      compareMode: compareMode.value,
+      createdAt: Date.now()
+    }
+
+    localCases.value.push(newCase)
+    saveLocalCasesToStorage()
+    selectedCaseId.value = newCase.id
+    ElMessage.success('案例已保存到本地')
+  }).catch(() => {})
+}
+
+const updateLocalCase = (id: string) => {
+  if (!canCompare.value) {
+    ElMessage.warning('没有可更新的内容')
+    return
+  }
+
+  const caseItem = localCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.confirm(`确定要更新案例"${caseItem.name}"吗？`, '更新案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(() => {
+    caseItem.leftTitle = leftTitle.value
+    caseItem.rightTitle = rightTitle.value
+    caseItem.leftJson = leftJson.value
+    caseItem.rightJson = rightJson.value
+    caseItem.compareMode = compareMode.value
+    saveLocalCasesToStorage()
+    ElMessage.success('案例更新成功')
+  }).catch(() => {})
+}
+
+const deleteLocalCase = (id: string | number) => {
+  ElMessageBox.confirm('确定要删除这个案例吗？', '删除案例', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    const index = localCases.value.findIndex(c => c.id === id)
+    if (index > -1) {
+      localCases.value.splice(index, 1)
+      saveLocalCasesToStorage()
+      if (selectedCaseId.value === id) {
+        selectedCaseId.value = null
+      }
+      ElMessage.success('案例已删除')
+    }
+  }).catch(() => {})
+}
+
+const renameLocalCase = (id: string) => {
+  const caseItem = localCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.prompt('请输入新的案例名称', '重命名案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputValue: caseItem.name,
+    inputPattern: /.+/,
+    inputErrorMessage: '案例名称不能为空'
+  }).then(({ value }) => {
+    caseItem.name = value
+    saveLocalCasesToStorage()
+    ElMessage.success('重命名成功')
+  }).catch(() => {})
+}
+
+// ========== 云端案例管理 ==========
+const saveCloudCase = async () => {
+  if (!canCompare.value) {
+    ElMessage.warning('请先输入有效的 JSON')
+    return
+  }
+
+  const defaultName = `案例 ${cloudCases.value.length + 1}`
+
+  ElMessageBox.prompt('请输入案例名称', '保存案例', {
+    confirmButtonText: '保存',
+    cancelButtonText: '取消',
+    inputValue: defaultName,
+    inputPattern: /.+/,
+    inputErrorMessage: '案例名称不能为空'
+  }).then(async ({ value }) => {
+    try {
+      const response = await saveData({
+        name: value,
+        data: {
+          leftTitle: leftTitle.value,
+          rightTitle: rightTitle.value,
+          leftJson: leftJson.value,
+          rightJson: rightJson.value,
+          compareMode: compareMode.value
+        },
+        remarks: 'JSON比对工具案例'
+      })
+      if (response) {
+        selectedCaseId.value = response.id
+      }
+      ElMessage.success('案例已保存到云端')
+    } catch (error: any) {
+      ElMessage.error(error.message || '保存失败')
+    }
+  }).catch(() => {})
+}
+
+const updateCloudCase = async (id: number) => {
+  if (!canCompare.value) {
+    ElMessage.warning('没有可更新的内容')
+    return
+  }
+
+  const caseItem = cloudCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.confirm(`确定要更新案例"${caseItem.name}"吗？`, '更新案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(async () => {
+    try {
+      await updateCloudData(id, {
+        data: {
+          leftTitle: leftTitle.value,
+          rightTitle: rightTitle.value,
+          leftJson: leftJson.value,
+          rightJson: rightJson.value,
+          compareMode: compareMode.value
+        }
+      })
+      ElMessage.success('案例更新成功')
+    } catch (error: any) {
+      ElMessage.error(error.message || '更新失败')
+    }
+  }).catch(() => {})
+}
+
+const deleteCloudCase = async (id: string | number) => {
+  ElMessageBox.confirm('确定要删除这个案例吗？', '删除案例', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await deleteCloudData(Number(id))
+      if (selectedCaseId.value === id) {
+        selectedCaseId.value = null
+      }
+      ElMessage.success('案例已删除')
+    } catch (error: any) {
+      ElMessage.error(error.message || '删除失败')
+    }
+  }).catch(() => {})
+}
+
+const renameCloudCase = async (id: number) => {
+  const caseItem = cloudCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.prompt('请输入新的案例名称', '重命名案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputValue: caseItem.name,
+    inputPattern: /.+/,
+    inputErrorMessage: '案例名称不能为空'
+  }).then(async ({ value }) => {
+    try {
+      await updateCloudData(id, {
+        name: value
+      })
+      ElMessage.success('重命名成功')
+    } catch (error: any) {
+      ElMessage.error(error.message || '重命名失败')
+    }
+  }).catch(() => {})
+}
+
+// ========== 案例转换 ==========
+const localToCloud = async (caseItem: ComparatorSavedCase) => {
+  try {
+    await saveData({
+      name: caseItem.name,
+      data: {
+        leftTitle: caseItem.leftTitle,
+        rightTitle: caseItem.rightTitle,
+        leftJson: caseItem.leftJson,
+        rightJson: caseItem.rightJson,
+        compareMode: caseItem.compareMode
+      },
+      remarks: '本地案例转云端'
+    })
+    ElMessage.success('案例已保存到云端')
+  } catch (error: any) {
+    ElMessage.error(error.message || '保存到云端失败')
+  }
+}
+
+const cloudToLocal = async (caseItem: any) => {
+  const newCase: ComparatorSavedCase = {
+    id: Date.now().toString(),
+    name: caseItem.name,
+    leftTitle: caseItem.data.leftTitle,
+    rightTitle: caseItem.data.rightTitle,
+    leftJson: caseItem.data.leftJson,
+    rightJson: caseItem.data.rightJson,
+    compareMode: caseItem.data.compareMode,
+    createdAt: new Date(caseItem.createTime).getTime()
+  }
+
+  localCases.value.push(newCase)
+  saveLocalCasesToStorage()
+  ElMessage.success('案例已保存到本地')
+}
+
+// ========== 案例管理包装函数 ==========
+const saveCase = () => {
+  if (casesSource.value === 'local') {
+    saveLocalCase()
+  } else {
+    saveCloudCase()
+  }
+}
+
+const updateCase = (id: string | number) => {
+  if (casesSource.value === 'local') {
+    updateLocalCase(id as string)
+  } else {
+    updateCloudCase(id as number)
+  }
+}
+
+const renameCase = (id: string | number) => {
+  if (casesSource.value === 'local') {
+    renameLocalCase(id as string)
+  } else {
+    renameCloudCase(id as number)
+  }
+}
+
+const loadCase = (item: any) => {
+  if (!item) return
+
+  selectedCaseId.value = casesSource.value === 'local' ? item.id : item.id
+  leftTitle.value = casesSource.value === 'local' ? item.leftTitle : item.data.leftTitle
+  rightTitle.value = casesSource.value === 'local' ? item.rightTitle : item.data.rightTitle
+  leftJson.value = casesSource.value === 'local' ? item.leftJson : item.data.leftJson
+  rightJson.value = casesSource.value === 'local' ? item.rightJson : item.data.rightJson
+  compareMode.value = casesSource.value === 'local' ? item.compareMode : item.data.compareMode
+
+  // 验证 JSON
+  validateJson('left')
+  validateJson('right')
+
+  // 如果 JSON 有效，自动执行比对
+  if (isLeftValid.value && isRightValid.value) {
+    startCompare()
+  }
+
+  ElMessage.success(`已加载案例: ${item.name}`)
+}
+
+const updateSelectedCase = () => {
+  if (selectedCaseId.value) {
+    updateCase(selectedCaseId.value)
+  }
+}
+
+const deleteCase = (id: string | number) => {
+  if (casesSource.value === 'local') {
+    deleteLocalCase(id as string)
+  } else {
+    deleteCloudCase(id as number)
+  }
+}
+
+// ========== 标题编辑功能 ==========
+const startLeftTitleEdit = () => {
+  leftTitleInput.value = leftTitle.value
+  leftTitleEditing.value = true
+  nextTick(() => {
+    leftTitleInputRef.value?.focus()
+  })
+}
+
+const finishLeftTitleEdit = () => {
+  if (leftTitleInput.value.trim()) {
+    leftTitle.value = leftTitleInput.value.trim()
+  }
+  leftTitleEditing.value = false
+}
+
+const cancelLeftTitleEdit = () => {
+  leftTitleEditing.value = false
+}
+
+const startRightTitleEdit = () => {
+  rightTitleInput.value = rightTitle.value
+  rightTitleEditing.value = true
+  nextTick(() => {
+    rightTitleInputRef.value?.focus()
+  })
+}
+
+const finishRightTitleEdit = () => {
+  if (rightTitleInput.value.trim()) {
+    rightTitle.value = rightTitleInput.value.trim()
+  }
+  rightTitleEditing.value = false
+}
+
+const cancelRightTitleEdit = () => {
+  rightTitleEditing.value = false
+}
+
+// ========== 初始化 ==========
+onMounted(() => {
+  loadLocalCasesFromStorage()
+})
+
+// 登录后自动加载云端案例
+watch(() => userStore.isLoggedIn, (newVal) => {
+  if (newVal && casesSource.value === 'cloud') {
+    loadCloudCases()
+  }
+})
+
+// 监听案例源切换
+watch(casesSource, (newSource) => {
+  selectedCaseId.value = null
+  if (newSource === 'cloud' && userStore.isLoggedIn) {
+    loadCloudCases()
+  }
+})
+
+// 暴露方法给父组件
+defineExpose({
+  loadExample,
+  clearAll,
+  saveCase,
+  loadCase,
+  updateCase,
+  deleteCase,
+  renameCase
 })
 </script>
 
 <style scoped lang="scss">
 .json-comparator {
-  width: 100%;
-  padding: var(--spacing-md);
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px);
-  box-sizing: border-box;
   overflow: hidden;
+  background-color: transparent;
+
+  // 图例固定在底部
+  .legend {
+    flex-shrink: 0;
+    margin-top: 16px;
+  }
 }
 
-.page-header {
-  flex-shrink: 0;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--color-text-primary);
-}
-
-.page-subtitle {
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  margin: var(--spacing-xs) 0 0 0;
-}
-
-.toolbar {
+// ========== 编辑模式 ==========
+.compare-mode {
   display: flex;
-  align-items: center;
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  flex-shrink: 0;
-}
-
-.toolbar-right {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-}
-
-.main-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--spacing-md);
+  gap: 16px;
   min-height: 0;
-  flex: 1;
-  overflow: hidden;
+  height: 100%;
+
+  &.edit-mode {
+    // 保持 flex 布局
+  }
+
+  &.compare-view {
+    // 保持 flex 布局（水平排列）
+  }
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
   overflow: hidden;
   min-height: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  &.left-panel,
+  &.right-panel {
+    flex: 1;
+  }
+
+  &.left-panel {
+    background-color: #fafafa;
+  }
+
+  &.right-panel {
+    background-color: #ffffff;
+  }
+
+  &.cases-panel {
+    width: 220px !important;
+    max-width: 220px !important;
+    min-width: 220px !important;
+    flex: 0 0 220px !important;
+    flex-shrink: 0;
+  }
 }
 
 .panel-header {
+  flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 1px solid var(--color-border-light);
-  background: var(--color-bg-secondary);
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e7ed;
+  background-color: #fafbfc;
+  gap: 8px;
+
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #303133;
+    letter-spacing: 0.3px;
+  }
 }
 
-.panel-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-primary);
+.cases-source-switcher {
+  align-self: flex-end;
 }
 
 .panel-body {
   flex: 1;
-  padding: var(--spacing-sm);
-  overflow: hidden;
+  overflow: auto;
+  padding: 12px;
   min-height: 0;
-}
 
-.input-body {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  height: 100%;
+  // 案例列表面板的 body 样式
+  .cases-panel & {
+    overflow-y: auto;
+    padding: 8px;
+  }
 
+  // 编辑模式下的 textarea 样式
   :deep(.el-textarea) {
-    flex: 1;
-    display: flex;
     height: 100%;
+    display: flex;
   }
 
   :deep(.el-textarea__inner) {
     height: 100% !important;
     resize: none;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.6;
   }
 }
 
-.diff-body {
-  background: #f8f9fa;
-  border-radius: var(--radius-md);
-  overflow: auto;
+.error-message {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: #fef0f0;
+  border-top: 1px solid #fde2e2;
+  color: #f56c6c;
+  font-size: 13px;
+}
+
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+
+  .el-button {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// ========== 对比模式 ==========
+.toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.diff-summary {
+  display: flex;
+  gap: 8px;
+}
+
+.diff-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .diff-page-wrapper {
+    display: inline-flex;
+    align-items: center;
+
+    .diff-page-button {
+      min-width: 80px;
+    }
+
+    .diff-page-input {
+      width: 70px;
+
+      :deep(.el-input__wrapper) {
+        padding: 0;
+        height: 32px;  // 和按钮高度一致
+      }
+
+      :deep(.el-input__inner) {
+        text-align: center;
+        padding: 0 4px;
+        height: 30px;
+        line-height: 30px;
+      }
+    }
+  }
+}
+
+.compare-panels {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   height: 100%;
-}
+  color: #909399;
+  gap: 12px;
 
-.diff-content {
-  padding: var(--spacing-sm);
-}
-
-.diff-item {
-  margin-bottom: var(--spacing-md);
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-light);
-  transition: all 0.2s;
-
-  &:hover {
-    background: var(--color-bg-secondary);
+  .el-icon {
+    font-size: 48px;
+    opacity: 0.5;
   }
 
+  span {
+    font-size: 14px;
+  }
+}
+
+// ========== 图例 ==========
+.legend {
+  flex-shrink: 0;
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #606266;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
   &.diff-added {
-    border-left: 4px solid #10b981;
+    background-color: #d4edda;
   }
 
   &.diff-removed {
-    border-left: 4px solid #ef4444;
+    background-color: #f8d7da;
   }
 
   &.diff-modified {
-    border-left: 4px solid #f59e0b;
+    background-color: #fff3cd;
+  }
+
+  &.diff-key-changed {
+    background-color: #ffeaa7;
+  }
+
+  &.diff-missing {
+    background-color: #e7f3ff;
   }
 }
 
-.diff-type {
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
+// ========== 高亮样式 ==========
+:deep(.diff-highlight) {
+  outline: 2px solid #2196F3 !important;
+  outline-offset: 1px;
+  animation: highlight-pulse 1s ease-in-out;
+}
 
-  .el-icon {
-    margin-right: 4px;
+:deep(.align-highlight) {
+  outline: 2px solid #67C23A !important;
+  outline-offset: 1px;
+  animation: align-pulse 2s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    background-color: inherit;
+  }
+  50% {
+    background-color: #e3f2fd;
   }
 }
 
-.diff-path {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 13px;
-  margin-bottom: var(--spacing-xs);
-  color: var(--color-text-secondary);
-}
-
-.diff-value {
-  display: flex;
-  flex-direction: column;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 13px;
-
-  .label {
-    margin-right: 4px;
-    color: var(--color-text-secondary);
+@keyframes align-pulse {
+  0%, 100% {
+    background-color: inherit;
   }
-
-  .value {
-    color: var(--color-text-primary);
-  }
-
-  .old-value {
-    color: #ef4444;
-  }
-
-  .new-value {
-    color: #10b981;
+  50% {
+    background-color: #f0f9ff;
   }
 }
 
-.no-differences {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-tertiary);
-  gap: var(--spacing-sm);
+// ========== 编辑模式布局优化 ==========
+.compare-mode.edit-mode {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 16px;
+  height: 100%;
+  overflow: hidden;
 
-  .el-icon {
-    font-size: 48px;
-    opacity: 0.5;
+  .cases-panel {
+    background-color: #fff;
   }
-}
 
-.empty-diff {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-tertiary);
-  gap: var(--spacing-sm);
-
-  .el-icon {
-    font-size: 48px;
-    opacity: 0.5;
-  }
-}
-
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
-  border-radius: var(--radius-sm);
-  color: #cf1322;
-  font-size: 13px;
-}
-
-.options-section {
-  padding: var(--spacing-md);
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
-  flex-shrink: 0;
-}
-
-.option-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-@media (max-width: 1024px) {
   .main-content {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar {
+    flex: 1;
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
+    min-width: 0;
+    overflow: hidden;
+
+    .toolbar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      background-color: #fff;
+      border: 1px solid #e4e7ed;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .compare-panels {
+      flex: 1;
+      display: flex;
+      gap: 16px;
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
+}
+
+// ========== 面板标题编辑 ==========
+.panel-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f0f0f0;
+
+    .edit-icon {
+      opacity: 1;
+    }
   }
 
-  .el-button-group {
-    width: 100%;
-    .el-button {
-      flex: 1;
+  .edit-icon {
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 14px;
+    color: #909399;
+  }
+}
+
+// ========== 对比模式布局优化 ==========
+.compare-view {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 16px;
+  height: 100%;
+  overflow: hidden;
+
+  .cases-panel {
+    background-color: #fff;
+  }
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+
+    .toolbar {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+      margin-bottom: 16px;
     }
+
+    .compare-panels {
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+  }
+}
+
+// ========== 案例列表面板样式 ==========
+.cases-body {
+  .empty-cases {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #909399;
+    gap: 12px;
+
+    .el-icon {
+      font-size: 48px;
+      opacity: 0.5;
+    }
+
+    span {
+      font-size: 13px;
+    }
+  }
+
+  .cases-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .case-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #606266;
+    gap: 8px;
+
+    &:hover {
+      background-color: #f5f7fa;
+      color: #303133;
+
+      .case-item-actions {
+        opacity: 1;
+      }
+    }
+
+    &.active {
+      background-color: #ecf5ff;
+      color: #409EFF;
+      font-weight: 500;
+    }
+
+    .case-item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .case-icon {
+      font-size: 16px;
+      color: #909399;
+      flex-shrink: 0;
+    }
+
+    .case-name {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .case-item-actions {
+      display: flex;
+      gap: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+
+      .el-button {
+        padding: 0 !important;
+        min-width: auto !important;
+        width: 20px !important;
+        height: 20px !important;
+        margin: 0 !important;
+      }
+    }
+  }
+}
+
+// ========== 响应式 ==========
+@media (max-width: 1024px) {
+  .compare-mode.edit-mode {
+    flex-direction: column;
+  }
+
+  .actions {
+    padding: 8px 0;
+
+    .el-button {
+      width: auto;
+      min-width: 200px;
+    }
+  }
+
+  .compare-panels {
+    flex-direction: column;
   }
 }
 </style>

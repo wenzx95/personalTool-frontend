@@ -1,13 +1,5 @@
 <template>
   <div class="json-formatter">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">JSON 格式化工具</h1>
-        <p class="page-subtitle">在线 JSON 编辑器（支持非标准格式、树形编辑、删除节点）</p>
-      </div>
-    </div>
-
     <!-- Toolbar -->
     <div class="toolbar">
       <el-button-group>
@@ -52,7 +44,7 @@
           <el-icon><FolderAdd /></el-icon>
           保存案例
         </el-button>
-        <el-button @click="updateSelectedCase" :disabled="!selectedCaseId || !parsedData">
+        <el-button @click="updateSelectedCase" :disabled="!selectedCase || !parsedData">
           <el-icon><Document /></el-icon>
           更新案例
         </el-button>
@@ -73,18 +65,40 @@
       <div class="panel cases-panel">
         <div class="panel-header">
           <span class="panel-title">案例列表</span>
+          <!-- 案例源切换 -->
+          <div class="cases-source-switcher">
+            <el-button-group>
+              <el-button
+                :type="casesSource === 'local' ? 'primary' : ''"
+                @click="casesSource = 'local'"
+                size="small"
+              >
+                <el-icon><FolderOpened /></el-icon>
+                本地
+              </el-button>
+              <el-button
+                :type="casesSource === 'cloud' ? 'primary' : ''"
+                @click="casesSource = 'cloud'"
+                :disabled="!userStore.isLoggedIn"
+                size="small"
+              >
+                <el-icon><Cloudy /></el-icon>
+                云端
+              </el-button>
+            </el-button-group>
+          </div>
         </div>
         <div class="panel-body cases-body">
-          <div v-if="savedCases.length === 0" class="empty-cases">
+          <div v-if="currentCaseList.length === 0" class="empty-cases">
             <el-icon><FolderOpened /></el-icon>
             <span>暂无保存的案例</span>
           </div>
           <div v-else class="cases-list">
             <div
-              v-for="item in savedCases"
-              :key="item.id"
-              :class="['case-item', { active: selectedCaseId === item.id }]"
-              @click="loadCase(item.id)"
+              v-for="item in currentCaseList"
+              :key="casesSource === 'local' ? item.id : item.id"
+              :class="['case-item', { active: selectedCaseId === (casesSource === 'local' ? item.id : item.id) }]"
+              @click="loadCase(item)"
             >
               <div class="case-item-content">
                 <el-icon class="case-icon"><Document /></el-icon>
@@ -93,15 +107,77 @@
                 </el-tooltip>
               </div>
               <div class="case-item-actions">
-                <el-button link size="small" @click.stop="updateCase(item.id)" title="更新">
-                  <el-icon><FolderAdd /></el-icon>
-                </el-button>
-                <el-button link size="small" @click.stop="renameCase(item.id)" title="重命名">
-                  <el-icon><Edit /></el-icon>
-                </el-button>
-                <el-button link size="small" @click.stop="deleteCase(item.id)" title="删除">
-                  <el-icon><Delete /></el-icon>
-                </el-button>
+                <!-- 本地案例操作 -->
+                <template v-if="casesSource === 'local'">
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="localToCloud(item)"
+                    :disabled="!userStore.isLoggedIn"
+                    title="保存到云端"
+                  >
+                    <el-icon><Upload /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="updateCase(item.id)"
+                    title="更新"
+                  >
+                    <el-icon><FolderAdd /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="renameCase(item.id)"
+                    title="重命名"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="deleteLocalCase(item.id)"
+                    title="删除"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+                <!-- 云端案例操作 -->
+                <template v-if="casesSource === 'cloud'">
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="cloudToLocal(item)"
+                    title="保存到本地"
+                  >
+                    <el-icon><Download /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="updateCase(item.id)"
+                    title="更新"
+                  >
+                    <el-icon><FolderAdd /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="renameCase(item.id)"
+                    title="重命名"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                  <el-button
+                    link
+                    size="small"
+                    @click.stop="deleteCloudCase(item.id)"
+                    title="删除"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
               </div>
             </div>
           </div>
@@ -212,6 +288,33 @@
         <el-checkbox v-model="sortKeys" @change="applySort">排序对象键名</el-checkbox>
       </el-space>
     </div>
+
+    <!-- 统计信息栏 -->
+    <div v-if="parsedData" class="stats-bar">
+      <div class="stats-item">
+        <el-icon><DataLine /></el-icon>
+        <span class="stats-label">字符数：</span>
+        <span class="stats-value">{{ formatNumber(inputJson.length) }}</span>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stats-item">
+        <el-icon><Files /></el-icon>
+        <span class="stats-label">节点数：</span>
+        <span class="stats-value">{{ formatNumber(countNodes(parsedData)) }}</span>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stats-item">
+        <el-icon><List /></el-icon>
+        <span class="stats-label">深度：</span>
+        <span class="stats-value">{{ getDepth(parsedData) }}</span>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stats-item">
+        <el-icon><Clock /></el-icon>
+        <span class="stats-label">格式化用时：</span>
+        <span class="stats-value">{{ formatTime }}ms</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -231,9 +334,29 @@ import {
   DArrowLeft,
   DArrowRight,
   MagicStick,
-  Edit
+  Edit,
+  DataLine,
+  Files,
+  Clock,
+  Cloudy,
+  Upload,
+  Download
 } from '@element-plus/icons-vue'
 import JsonTreeNode from '@/components/JsonTreeNode.vue'
+import { useUserStore } from '@/stores/user'
+import { useUserData } from '@/hooks/useUserData'
+
+// 用户状态管理
+const userStore = useUserStore()
+
+// 通用数据管理 Hook（云端）
+const {
+  dataList: cloudCases,
+  loadDataList: loadCloudCases,
+  saveData,
+  updateData: updateCloudData,
+  deleteData: deleteCloudData
+} = useUserData('json-formatter')
 
 // ========== Utilities ==========
 // 防抖函数实现
@@ -246,16 +369,17 @@ function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
 }
 
 // ========== Constants ==========
-const STORAGE_KEY = 'json-cases'
+const LOCAL_STORAGE_KEY = 'json-cases'
 const MAX_CODE_VIEW_LINES = 1000  // 代码视图最多显示 1000 行
 const MAX_EXPAND_NODES = 500  // 全展开操作最大节点数警告阈值
 
 // ========== Types ==========
-interface SavedCase {
-  id: string
+interface LocalSavedCase {
+  id: string | number
   name: string
   data: any
-  createdAt: number
+  createdAt?: number
+  createTime?: string
 }
 
 type ViewMode = 'tree' | 'code'
@@ -274,9 +398,27 @@ const parsedData = ref<any>(null)
 const expandedNodes = ref<Set<string>>(new Set())
 const leftPanelCollapsed = ref(false)
 const isCompressed = ref(false)  // 标记是否为压缩模式
+const formatTime = ref(0)  // 格式化用时（毫秒）
 
-const savedCases = ref<SavedCase[]>([])
-const selectedCaseId = ref<string | null>(null)
+// 本地案例
+const localCases = ref<LocalSavedCase[]>([])
+const casesSource = ref<'local' | 'cloud'>('local')
+const selectedCaseId = ref<string | number | null>(null)
+
+// 当前案例列表（根据案例源切换）
+const currentCaseList = computed(() => {
+  return casesSource.value === 'local' ? localCases.value : cloudCases.value
+})
+
+// 当前选中的案例
+const selectedCase = computed(() => {
+  if (!selectedCaseId.value) return null
+  if (casesSource.value === 'local') {
+    return localCases.value.find(item => item.id === selectedCaseId.value) || null
+  } else {
+    return cloudCases.value.find(item => item.id === selectedCaseId.value) || null
+  }
+})
 
 // ========== Utilities ==========
 // 解析 JSON/JavaScript 对象（支持非标准格式）
@@ -349,62 +491,34 @@ const countNodes = (obj: any): number => {
 // 深拷贝对象
 const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
 
-// ========== Case Management ==========
-const loadCasesFromStorage = () => {
+// ========== Local Case Management ==========
+const loadLocalCases = () => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (stored) {
-      savedCases.value = JSON.parse(stored)
+      localCases.value = JSON.parse(stored)
     }
   } catch (error) {
-    console.error('加载案例失败:', error)
+    console.error('加载本地案例失败:', error)
   }
 }
 
-const saveCasesToStorage = () => {
+const saveLocalCasesToStorage = () => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedCases.value))
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localCases.value))
   } catch (error) {
-    console.error('保存案例失败:', error)
+    console.error('保存本地案例失败:', error)
     ElMessage.error('保存失败，可能是存储空间不足')
   }
 }
 
-const updateSelectedCase = () => {
-  if (!selectedCaseId) {
-    ElMessage.warning('请先选择要更新的案例')
-    return
-  }
-  updateCase(selectedCaseId.value as string)
-}
-
-const updateCase = (id: string) => {
-  if (!parsedData.value) {
-    ElMessage.warning('没有可更新的内容')
-    return
-  }
-
-  const caseItem = savedCases.value.find(c => c.id === id)
-  if (!caseItem) return
-
-  ElMessageBox.confirm(`确定要更新案例"${caseItem.name}"吗？`, '更新案例', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'info'
-  }).then(() => {
-    caseItem.data = deepClone(parsedData.value)
-    saveCasesToStorage()
-    ElMessage.success('案例更新成功')
-  }).catch(() => {})
-}
-
-const saveCase = () => {
+const saveLocalCase = () => {
   if (!parsedData.value) {
     ElMessage.warning('没有可保存的内容')
     return
   }
 
-  const defaultName = `案例 ${savedCases.value.length + 1}`
+  const defaultName = `案例 ${localCases.value.length + 1}`
 
   ElMessageBox.prompt('请输入案例名称', '保存案例', {
     confirmButtonText: '保存',
@@ -413,43 +527,50 @@ const saveCase = () => {
     inputPattern: /.+/,
     inputErrorMessage: '案例名称不能为空'
   }).then(({ value }) => {
-    const newCase: SavedCase = {
+    const newCase: LocalSavedCase = {
       id: Date.now().toString(),
       name: value,
       data: deepClone(parsedData.value),
       createdAt: Date.now()
     }
 
-    savedCases.value.push(newCase)
-    saveCasesToStorage()
+    localCases.value.push(newCase)
+    saveLocalCasesToStorage()
     selectedCaseId.value = newCase.id
-    ElMessage.success('案例保存成功')
+    ElMessage.success('案例已保存到本地')
   }).catch(() => {})
 }
 
-const loadCase = (id: string) => {
-  const caseItem = savedCases.value.find(c => c.id === id)
+const updateLocalCase = (id: string) => {
+  if (!parsedData.value) {
+    ElMessage.warning('没有可更新的内容')
+    return
+  }
+
+  const caseItem = localCases.value.find(c => c.id === id)
   if (!caseItem) return
 
-  selectedCaseId.value = id
-  parsedData.value = deepClone(caseItem.data)
-  inputJson.value = JSON.stringify(caseItem.data, null, indentSpaces.value)
-  errorMessage.value = ''
-  isValid.value = true
-  expandedNodes.value = new Set()
-  ElMessage.success(`已加载案例: ${caseItem.name}`)
+  ElMessageBox.confirm(`确定要更新案例"${caseItem.name}"吗？`, '更新案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(() => {
+    caseItem.data = deepClone(parsedData.value)
+    saveLocalCasesToStorage()
+    ElMessage.success('案例更新成功')
+  }).catch(() => {})
 }
 
-const deleteCase = (id: string) => {
+const deleteLocalCase = (id: string | number) => {
   ElMessageBox.confirm('确定要删除这个案例吗？', '删除案例', {
     confirmButtonText: '删除',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    const index = savedCases.value.findIndex(c => c.id === id)
+    const index = localCases.value.findIndex(c => c.id === id)
     if (index > -1) {
-      savedCases.value.splice(index, 1)
-      saveCasesToStorage()
+      localCases.value.splice(index, 1)
+      saveLocalCasesToStorage()
       if (selectedCaseId.value === id) {
         selectedCaseId.value = null
       }
@@ -458,8 +579,8 @@ const deleteCase = (id: string) => {
   }).catch(() => {})
 }
 
-const renameCase = (id: string) => {
-  const caseItem = savedCases.value.find(c => c.id === id)
+const renameLocalCase = (id: string) => {
+  const caseItem = localCases.value.find(c => c.id === id)
   if (!caseItem) return
 
   ElMessageBox.prompt('请输入新的案例名称', '重命名案例', {
@@ -470,13 +591,200 @@ const renameCase = (id: string) => {
     inputErrorMessage: '案例名称不能为空'
   }).then(({ value }) => {
     caseItem.name = value
-    saveCasesToStorage()
+    saveLocalCasesToStorage()
     ElMessage.success('重命名成功')
   }).catch(() => {})
 }
 
+// ========== Cloud Case Management ==========
+const saveCloudCase = async () => {
+  if (!parsedData.value) {
+    ElMessage.warning('没有可保存的内容')
+    return
+  }
+
+  const defaultName = `案例 ${cloudCases.value.length + 1}`
+
+  ElMessageBox.prompt('请输入案例名称', '保存案例', {
+    confirmButtonText: '保存',
+    cancelButtonText: '取消',
+    inputValue: defaultName,
+    inputPattern: /.+/,
+    inputErrorMessage: '案例名称不能为空'
+  }).then(async ({ value }) => {
+    try {
+      const response = await saveData({
+        name: value,
+        data: deepClone(parsedData.value),
+        remarks: 'JSON格式化工具案例'
+      })
+      if (response) {
+        selectedCaseId.value = response.id
+      }
+      ElMessage.success('案例已保存到云端')
+    } catch (error: any) {
+      ElMessage.error(error.message || '保存失败')
+    }
+  }).catch(() => {})
+}
+
+const updateCloudCase = async (id: number) => {
+  if (!parsedData.value) {
+    ElMessage.warning('没有可更新的内容')
+    return
+  }
+
+  const caseItem = cloudCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.confirm(`确定要更新案例"${caseItem.name}"吗？`, '更新案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(async () => {
+    try {
+      await updateCloudData(id, {
+        data: deepClone(parsedData.value)
+      })
+      ElMessage.success('案例更新成功')
+    } catch (error: any) {
+      ElMessage.error(error.message || '更新失败')
+    }
+  }).catch(() => {})
+}
+
+const deleteCloudCase = async (id: string | number) => {
+  ElMessageBox.confirm('确定要删除这个案例吗？', '删除案例', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await deleteCloudData(Number(id))
+      if (selectedCaseId.value === id) {
+        selectedCaseId.value = null
+      }
+      ElMessage.success('案例已删除')
+    } catch (error: any) {
+      ElMessage.error(error.message || '删除失败')
+    }
+  }).catch(() => {})
+}
+
+const renameCloudCase = async (id: number) => {
+  const caseItem = cloudCases.value.find(c => c.id === id)
+  if (!caseItem) return
+
+  ElMessageBox.prompt('请输入新的案例名称', '重命名案例', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputValue: caseItem.name,
+    inputPattern: /.+/,
+    inputErrorMessage: '案例名称不能为空'
+  }).then(async ({ value }) => {
+    try {
+      await updateCloudData(id, {
+        name: value
+      })
+      ElMessage.success('重命名成功')
+    } catch (error: any) {
+      ElMessage.error(error.message || '重命名失败')
+    }
+  }).catch(() => {})
+}
+
+// ========== Case Conversion ==========
+const localToCloud = async (caseItem: LocalSavedCase) => {
+  try {
+    await saveData({
+      name: caseItem.name,
+      data: caseItem.data,
+      remarks: '本地案例转云端'
+    })
+    ElMessage.success('案例已保存到云端')
+  } catch (error: any) {
+    ElMessage.error(error.message || '保存到云端失败')
+  }
+}
+
+const cloudToLocal = async (caseItem: any) => {
+  const newCase: LocalSavedCase = {
+    id: Date.now().toString(),
+    name: caseItem.name,
+    data: caseItem.data,
+    createdAt: new Date(caseItem.createTime).getTime()
+  }
+
+  localCases.value.push(newCase)
+  saveLocalCasesToStorage()
+  ElMessage.success('案例已保存到本地')
+}
+
+// ========== Case Management Wrappers ==========
+const saveCase = () => {
+  if (casesSource.value === 'local') {
+    saveLocalCase()
+  } else {
+    saveCloudCase()
+  }
+}
+
+const updateCase = (id: string | number) => {
+  if (casesSource.value === 'local') {
+    updateLocalCase(id as string)
+  } else {
+    updateCloudCase(id as number)
+  }
+}
+
+const renameCase = (id: string | number) => {
+  if (casesSource.value === 'local') {
+    renameLocalCase(id as string)
+  } else {
+    renameCloudCase(id as number)
+  }
+}
+
+const loadCase = (item: any) => {
+  if (!item) return
+  try {
+    parsedData.value = deepClone(item.data)
+    selectedCaseId.value = casesSource.value === 'local' ? item.id : item.id
+    inputJson.value = JSON.stringify(item.data, null, indentSpaces.value)
+    errorMessage.value = ''
+    isValid.value = true
+    expandedNodes.value = new Set()
+    ElMessage.success(`已加载案例: ${item.name}`)
+  } catch (error: any) {
+    ElMessage.error('加载案例失败: ' + error.message)
+  }
+}
+
+const updateSelectedCase = () => {
+  if (!selectedCaseId.value) {
+    ElMessage.warning('请先选择要更新的案例')
+    return
+  }
+  updateCase(selectedCaseId.value)
+}
+
 // Initialize cases
-loadCasesFromStorage()
+loadLocalCases()
+
+// 登录后自动加载云端案例
+watch(() => userStore.isLoggedIn, (newVal) => {
+  if (newVal && casesSource.value === 'cloud') {
+    loadCloudCases()
+  }
+})
+
+// 监听案例源切换
+watch(casesSource, (newSource) => {
+  selectedCaseId.value = null
+  if (newSource === 'cloud' && userStore.isLoggedIn) {
+    loadCloudCases()
+  }
+})
 
 // ========== JSON Operations ==========
 const validateJson = () => {
@@ -552,6 +860,9 @@ const formatJson = async () => {
 
   processing.value = true
   processingDetail.value = '正在解析...'
+
+  const startTime = performance.now()
+
   try {
     // 让 UI 更新
     await nextTick()
@@ -579,6 +890,10 @@ const formatJson = async () => {
 
     // 取消压缩模式
     isCompressed.value = false
+
+    // 记录格式化时间
+    const endTime = performance.now()
+    formatTime.value = Math.round(endTime - startTime)
 
     ElMessage.success('格式化成功')
   } catch (error: any) {
@@ -1100,47 +1415,86 @@ watch(indentSpaces, () => {
     outputJson.value = JSON.stringify(parsedData.value, null, indentSpaces.value)
   }
 })
+
+// ========== 统计函数 ==========
+const formatNumber = (num: number): string => {
+  return num.toLocaleString('zh-CN')
+}
+
+const getDepth = (obj: any, depth = 1): number => {
+  if (obj === null || obj === undefined) return depth
+  if (typeof obj !== 'object') return depth
+
+  let maxDepth = depth
+  if (Array.isArray(obj)) {
+    obj.forEach(item => {
+      maxDepth = Math.max(maxDepth, getDepth(item, depth + 1))
+    })
+  } else {
+    Object.values(obj).forEach(value => {
+      maxDepth = Math.max(maxDepth, getDepth(value, depth + 1))
+    })
+  }
+  return maxDepth
+}
+
+// 加载示例数据
+const loadExample = () => {
+  const exampleJson = {
+    "name": "张三",
+    "age": 30,
+    "isStudent": false,
+    "courses": [
+      "数学",
+      "英语",
+      "物理"
+    ],
+    "address": {
+      "city": "北京",
+      "district": "朝阳区",
+      "street": "建国路"
+    },
+    "scores": {
+      "math": 95,
+      "english": 88,
+      "physics": 92
+    }
+  }
+
+  inputJson.value = JSON.stringify(exampleJson, null, 2)
+  validateJson()
+  ElMessage.success('已加载示例数据')
+}
+
+// 暴露方法给父组件
+defineExpose({
+  loadExample,
+  clearAll
+})
 </script>
 
 <style scoped lang="scss">
 .json-formatter {
   width: 100%;
-  padding: var(--spacing-md);
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px);
-  box-sizing: border-box;
+  background-color: transparent;
   overflow: hidden;
-}
-
-.page-header {
-  flex-shrink: 0;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--color-text-primary);
-}
-
-.page-subtitle {
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  margin: var(--spacing-xs) 0 0 0;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
+  gap: 8px;
   flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .toolbar-right {
@@ -1225,11 +1579,12 @@ watch(indentSpaces, () => {
 .panel {
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
   overflow: hidden;
   min-height: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .panel.full-width {
@@ -1238,22 +1593,29 @@ watch(indentSpaces, () => {
 
 .panel-header {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 1px solid var(--color-border-light);
-  background: var(--color-bg-secondary);
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e7ed;
+  background: #fafbfc;
+  gap: 8px;
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: #303133;
+  letter-spacing: 0.3px;
+}
+
+.cases-source-switcher {
+  align-self: flex-end;
 }
 
 .panel-body {
   flex: 1;
-  padding: var(--spacing-sm);
+  padding: 12px;
   overflow: hidden;
   min-height: 0;
 }
@@ -1326,17 +1688,62 @@ watch(indentSpaces, () => {
 }
 
 .options-section {
-  padding: var(--spacing-md);
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  padding: 12px 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
   flex-shrink: 0;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .option-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: #303133;
+}
+
+// 统计信息栏
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  flex-wrap: wrap;
+}
+
+.stats-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .el-icon {
+    font-size: 16px;
+    color: #909399;
+  }
+
+  .stats-label {
+    color: #606266;
+    font-weight: 500;
+  }
+
+  .stats-value {
+    color: #409EFF;
+    font-weight: 600;
+    font-family: 'Monaco', 'Consolas', monospace;
+  }
+}
+
+.stats-divider {
+  width: 1px;
+  height: 16px;
+  background-color: #e4e7ed;
 }
 
 // JSON 语法高亮
