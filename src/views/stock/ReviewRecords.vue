@@ -140,7 +140,7 @@
           <template #default="{ row }">
             <div class="sectors-wrap">
               <el-tag
-                v-for="(sector, index) in row.hot_sectors.slice(0, 3)"
+                v-for="(sector, index) in (row.hot_sectors || []).slice(0, 3)"
                 :key="index"
                 size="small"
                 type="primary"
@@ -148,10 +148,10 @@
               >
                 {{ sector }}
               </el-tag>
-              <span v-if="row.hot_sectors.length > 3" class="more-hint">
-                +{{ row.hot_sectors.length - 3 }}
+              <span v-if="(row.hot_sectors || []).length > 3" class="more-hint">
+                +{{ (row.hot_sectors || []).length - 3 }}
               </span>
-              <span v-if="row.hot_sectors.length === 0" class="empty-hint">暂无</span>
+              <span v-if="!row.hot_sectors || row.hot_sectors.length === 0" class="empty-hint">暂无</span>
             </div>
           </template>
         </el-table-column>
