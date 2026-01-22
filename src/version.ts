@@ -1,8 +1,9 @@
 // 自动生成的版本信息
-// 构建时间：2026-01-16 11:20:22
+// 构建时间：2026-01-20 00:01:09
+// 注意：此文件由 generate-version.sh 自动生成，请勿手动修改
 export const APP_VERSION = {
-  version: "20260116112022",
-  buildTime: "2026-01-16 11:20:22",
-  buildDate: "2026-01-16",
-  buildTimeShort: "11:20:22"
+  version: "20260120000109",
+  buildTime: "2026-01-20 00:01:09",
+  buildDate: "2026-01-20",
+  buildTimeShort: "00:01:09"
 }
