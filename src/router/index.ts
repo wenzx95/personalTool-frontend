@@ -136,12 +136,6 @@ const router = createRouter({
           // 如果遇到404错误，请确保后端已部署最新的代码
         },
         {
-          path: 'blog',
-          name: 'Blog',
-          component: () => import('@/views/BlogView.vue'),
-          meta: { title: '博客' }
-        },
-        {
           path: 'json',
           name: 'Json',
           component: () => import('@/views/JsonView.vue'),
@@ -152,6 +146,128 @@ const router = createRouter({
           name: 'Account',
           component: () => import('@/views/AccountView.vue'),
           meta: { title: '记账（旧版）' }
+        }
+      ]
+    },
+    // 博客系统 - 独立布局
+    {
+      path: '/blog',
+      component: () => import('@/layouts/BlogLayout.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/blog/list'
+        },
+        {
+          path: 'list',
+          name: 'BlogList',
+          component: () => import('@/views/blog/BlogList.vue'),
+          meta: { title: '博客列表', requiresAuth: false }
+        },
+        {
+          path: ':id',
+          name: 'BlogDetail',
+          component: () => import('@/views/blog/BlogDetail.vue'),
+          meta: { title: '博客详情', requiresAuth: false }
+        }
+      ]
+    },
+    // 博客管理 - 仍在主布局中
+    {
+      path: '/admin/blog',
+      component: () => import('@/layouts/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/admin/blog/list'
+        },
+        {
+          path: 'list',
+          name: 'BlogManagementList',
+          component: () => import('@/views/blog/BlogManagement.vue'),
+          meta: { title: '博客管理' }
+        },
+        {
+          path: 'edit',
+          name: 'BlogCreate',
+          component: () => import('@/views/admin/BlogEdit.vue'),
+          meta: { title: '新建博客' }
+        },
+        {
+          path: 'edit/:id',
+          name: 'BlogEdit',
+          component: () => import('@/views/admin/BlogEdit.vue'),
+          meta: { title: '编辑博客' }
+        }
+      ]
+    },
+    // 知识库系统 - 独立布局
+    {
+      path: '/knowledge',
+      component: () => import('@/layouts/BlogLayout.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/knowledge/list'
+        },
+        {
+          path: 'list',
+          name: 'KnowledgeList',
+          component: () => import('@/views/knowledge/KnowledgeList.vue'),
+          meta: { title: '知识库', requiresAuth: false }
+        },
+        {
+          path: ':id',
+          name: 'KnowledgeView',
+          component: () => import('@/views/knowledge/KnowledgeView.vue'),
+          meta: { title: '知识库详情', requiresAuth: false }
+        }
+      ]
+    },
+    // 知识库管理 - 仍在主布局中
+    {
+      path: '/admin/knowledge',
+      component: () => import('@/layouts/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/admin/knowledge/list'
+        },
+        {
+          path: 'list',
+          name: 'KnowledgeManagement',
+          component: () => import('@/views/admin/knowledge/KnowledgeManagement.vue'),
+          meta: { title: '知识库管理' }
+        },
+        {
+          path: 'edit',
+          name: 'KnowledgeCreate',
+          component: () => import('@/views/admin/knowledge/KnowledgeEdit.vue'),
+          meta: { title: '创建知识库' }
+        },
+        {
+          path: 'edit/:id',
+          name: 'KnowledgeEdit',
+          component: () => import('@/views/admin/knowledge/KnowledgeEdit.vue'),
+          meta: { title: '编辑知识库' }
+        },
+        {
+          path: ':kbId/chapter/edit',
+          name: 'ChapterCreate',
+          component: () => import('@/views/admin/knowledge/ChapterEdit.vue'),
+          meta: { title: '添加章节' }
+        },
+        {
+          path: ':kbId/chapter/edit/:chapterId',
+          name: 'ChapterEdit',
+          component: () => import('@/views/admin/knowledge/ChapterEdit.vue'),
+          meta: { title: '编辑章节' }
+        },
+        {
+          path: 'import',
+          name: 'KnowledgeImport',
+          component: () => import('@/views/admin/knowledge/KnowledgeImport.vue'),
+          meta: { title: '导入知识库' }
         }
       ]
     }
@@ -172,6 +288,20 @@ router.beforeEach((to, _from, next) => {
   // Tools pages are always accessible (no login required)
   if (to.path.startsWith('/tools')) {
     console.log('[Router Guard] Tools page - allowing access')
+    next()
+    return
+  }
+
+  // Blog pages are always accessible (no login required)
+  if (to.path.startsWith('/blog')) {
+    console.log('[Router Guard] Blog page - allowing access')
+    next()
+    return
+  }
+
+  // Knowledge pages are always accessible (no login required)
+  if (to.path.startsWith('/knowledge')) {
+    console.log('[Router Guard] Knowledge page - allowing access')
     next()
     return
   }

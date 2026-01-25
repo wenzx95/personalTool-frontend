@@ -1,200 +1,180 @@
 <template>
-  <el-container class="main-layout">
-    <!-- Sidebar - Desktop -->
-    <el-aside class="sidebar" :class="{ collapsed: sidebarCollapsed }" :width="sidebarWidth">
-      <div class="sidebar-header">
-        <div class="logo">
+  <el-container class="volc-layout">
+    <!-- 顶部导航栏 - 48px高度 -->
+    <el-header class="volc-navbar">
+      <div class="navbar-left">
+        <!-- Logo -->
+        <div class="navbar-logo" @click="router.push('/tools/json')">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon">
-            <rect width="24" height="24" rx="6" fill="#409EFF"/>
+            <rect width="24" height="24" rx="6" fill="#3370ff"/>
             <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
             <circle cx="18" cy="16" r="3" fill="white"/>
-            <path d="M18 14.5v3M18 15.5l1.5-1.5M18 16.5l-1.5 1.5" stroke="#409EFF" stroke-width="1" stroke-linecap="round"/>
           </svg>
-          <span class="logo-text">工具集</span>
+          <span class="logo-text">个人工具集</span>
         </div>
+
+        <!-- 分隔线 -->
+        <div class="navbar-divider"></div>
+
+        <!-- 面包屑 -->
+        <el-breadcrumb separator="/" class="navbar-breadcrumb">
+          <el-breadcrumb-item
+            v-for="item in breadcrumbs"
+            :key="item.path"
+            :to="item.path"
+          >
+            {{ item.title }}
+          </el-breadcrumb-item>
+        </el-breadcrumb>
       </div>
 
-      <nav class="sidebar-nav">
-        <div
-          v-for="section in filteredMenuSections"
-          :key="section.title"
-          class="nav-section"
-        >
-          <div class="nav-section-title">{{ section.title }}</div>
-          <div
-            v-for="item in section.items"
-            :key="item.key"
-          >
-            <!-- Parent Menu Item with Children -->
-            <el-tooltip
-              v-if="item.children && item.children.length > 0"
-              :content="item.label"
-              placement="right"
-              :disabled="!sidebarCollapsed"
-            >
-              <div
-                :class="['nav-item', 'nav-item-parent', { active: isParentActive(item) }]"
-                @click="toggleSubmenu(item.key)"
-              >
-                <component :is="item.icon" class="nav-icon" />
-                <span class="nav-text">{{ item.label }}</span>
-                <el-icon
-                  :class="['submenu-arrow', { expanded: expandedMenus.includes(item.key) }]"
-                >
-                  <ArrowRight />
-                </el-icon>
-              </div>
-            </el-tooltip>
+      <div class="navbar-right">
+        <!-- 搜索框 -->
+        <el-input
+          v-model="searchQuery"
+          placeholder="搜索..."
+          :prefix-icon="Search"
+          class="navbar-search"
+          size="small"
+          clearable
+        />
 
-            <!-- Simple Menu Item without Children -->
-            <el-tooltip
-              v-else
-              :content="item.label"
-              placement="right"
-              :disabled="!sidebarCollapsed"
-            >
-              <div
-                :class="['nav-item', { active: isActive(item.key) }]"
-                @click="handleNavClick(item.key)"
-              >
-                <component :is="item.icon" class="nav-icon" />
-                <span class="nav-text">{{ item.label }}</span>
-                <el-badge v-if="item.badge" :value="item.badge" class="nav-badge" />
-              </div>
-            </el-tooltip>
+        <!-- 文档链接 -->
+        <el-button link class="navbar-link">
+          <el-icon><Document /></el-icon>
+          文档
+        </el-button>
 
-            <!-- Submenu Items -->
-            <div
-              v-if="item.children && item.children.length > 0"
-              :class="['submenu', { expanded: expandedMenus.includes(item.key) }]"
-            >
-              <div
-                v-for="child in item.children"
-                :key="child.key"
-                :class="['nav-item', 'nav-item-child', { active: isActive(child.key) }]"
-                @click="handleNavClick(child.key)"
-              >
-                <component :is="child.icon" class="nav-icon" />
-                <span class="nav-text">{{ child.label }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+        <!-- 帮助 -->
+        <el-button link class="navbar-link">
+          <el-icon><QuestionFilled /></el-icon>
+          帮助
+        </el-button>
 
-      <div class="sidebar-footer">
-        <!-- 已登录用户 -->
-        <el-dropdown v-if="userStore.isLoggedIn" trigger="click" @command="handleLogout">
-          <div class="user-profile logged-in">
-            <el-avatar :size="28" icon="UserFilled" />
-            <div class="user-info">
-              <div class="user-name">{{ userStore.user?.nickname || '用户' }}</div>
-              <div class="user-status">在线</div>
-            </div>
+        <!-- 分隔线 -->
+        <div class="navbar-divider"></div>
+
+        <!-- 用户下拉菜单 -->
+        <el-dropdown trigger="click" @command="handleUserAction">
+          <div class="user-dropdown">
+            <el-avatar :size="28" :icon="UserFilled" />
+            <span class="user-name">{{ userStore.user?.nickname || '用户' }}</span>
+            <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="logout">
+              <el-dropdown-item command="profile">
+                <el-icon><User /></el-icon>
+                个人设置
+              </el-dropdown-item>
+              <el-dropdown-item command="blog">
+                <el-icon><DocumentCopy /></el-icon>
+                博客
+              </el-dropdown-item>
+              <el-dropdown-item divided command="logout">
+                <el-icon><SwitchButton /></el-icon>
                 退出登录
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
+      </div>
+    </el-header>
 
-        <!-- 未登录用户 -->
-        <div v-else class="user-profile not-logged-in" @click="router.push('/login')">
-          <div class="login-prompt">
-            <el-icon :size="24"><User /></el-icon>
-            <div class="login-text">
-              <div class="login-title">点击登录</div>
-              <div class="login-subtitle">访问更多功能</div>
+    <el-container class="main-container">
+      <!-- 左侧菜单栏 -->
+      <el-aside class="volc-sidebar" :class="{ collapsed: sidebarCollapsed }" :width="sidebarWidth">
+        <!-- 菜单内容 -->
+        <nav class="sidebar-nav">
+          <div
+            v-for="section in filteredMenuSections"
+            :key="section.title"
+            class="menu-section"
+          >
+            <div v-show="!sidebarCollapsed" class="menu-section-title">{{ section.title }}</div>
+
+            <div
+              v-for="item in section.items"
+              :key="item.key"
+            >
+              <!-- 父级菜单项 -->
+              <el-tooltip
+                v-if="item.children && item.children.length > 0"
+                :content="item.label"
+                placement="right"
+                :disabled="!sidebarCollapsed"
+                :show-after="500"
+              >
+                <div
+                  :class="['menu-item', 'menu-item-parent', {
+                    active: isParentActive(item),
+                    expanded: expandedMenus.includes(item.key)
+                  }]"
+                  @click="toggleSubmenu(item.key)"
+                >
+                  <component :is="item.icon" class="menu-icon" />
+                  <span v-show="!sidebarCollapsed" class="menu-text">{{ item.label }}</span>
+                  <el-icon v-show="!sidebarCollapsed" class="submenu-arrow">
+                    <ArrowRight />
+                  </el-icon>
+                </div>
+              </el-tooltip>
+
+              <!-- 简单菜单项 -->
+              <el-tooltip
+                v-else
+                :content="item.label"
+                placement="right"
+                :disabled="!sidebarCollapsed"
+                :show-after="500"
+              >
+                <div
+                  :class="['menu-item', { active: isActive(item.key) }]"
+                  @click="handleNavClick(item.key)"
+                >
+                  <component :is="item.icon" class="menu-icon" />
+                  <span v-show="!sidebarCollapsed" class="menu-text">{{ item.label }}</span>
+                  <el-badge v-if="item.badge" :value="item.badge" class="menu-badge" />
+                </div>
+              </el-tooltip>
+
+              <!-- 子菜单 -->
+              <transition name="submenu">
+                <div
+                  v-if="item.children && item.children.length > 0"
+                  v-show="expandedMenus.includes(item.key)"
+                  class="submenu"
+                >
+                  <div
+                    v-for="child in item.children"
+                    :key="child.key"
+                    :class="['menu-item', 'menu-item-child', { active: isActive(child.key) }]"
+                    @click="handleNavClick(child.key)"
+                  >
+                    <component :is="child.icon" class="menu-icon" />
+                    <span v-show="!sidebarCollapsed" class="menu-text">{{ child.label }}</span>
+                  </div>
+                </div>
+              </transition>
             </div>
           </div>
+        </nav>
+
+        <!-- 折叠按钮 -->
+        <div class="sidebar-footer">
+          <div class="collapse-btn" @click="toggleSidebar">
+            <el-icon :size="14">
+              <component :is="sidebarCollapsed ? 'Expand' : 'Fold'" />
+            </el-icon>
+            <span v-show="!sidebarCollapsed" class="collapse-text">
+              {{ sidebarCollapsed ? '' : '收起' }}
+            </span>
+          </div>
         </div>
-      </div>
-    </el-aside>
+      </el-aside>
 
-    <!-- Main Content -->
-    <el-container class="main-container">
-      <el-header class="main-header">
-        <div class="header-left">
-          <el-button
-            :icon="Fold"
-            circle
-            size="small"
-            @click="toggleSidebar"
-            class="sidebar-toggle"
-          />
-
-          <el-breadcrumb separator="/">
-            <el-breadcrumb-item
-              v-for="item in breadcrumbs"
-              :key="item.path"
-              :to="item.path"
-            >
-              {{ item.title }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-
-          <!-- JSON工具导航栏 - 仅在JSON工具页面显示 -->
-          <template v-if="route.path.startsWith('/tools/json')">
-            <div class="json-tools-header">
-              <div class="json-tools-title">
-                <el-icon class="title-icon"><Document /></el-icon>
-                <span>JSON工具</span>
-              </div>
-              <div class="json-tools-nav">
-                <div
-                  class="nav-item"
-                  :class="{ active: jsonToolActiveTab === 'formatter' }"
-                  @click="jsonToolActiveTab = 'formatter'"
-                >
-                  <el-icon><Document /></el-icon>
-                  <span>格式化</span>
-                </div>
-                <div
-                  class="nav-item"
-                  :class="{ active: jsonToolActiveTab === 'comparator' }"
-                  @click="jsonToolActiveTab = 'comparator'"
-                >
-                  <el-icon><Rank /></el-icon>
-                  <span>比对</span>
-                </div>
-              </div>
-            </div>
-          </template>
-        </div>
-
-        <div class="header-right">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索..."
-            :prefix-icon="Search"
-            class="search-input"
-            clearable
-          />
-
-          <el-button :icon="Bell" circle class="header-btn" />
-          <el-dropdown trigger="click">
-            <el-button :icon="Setting" circle class="header-btn" />
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="handleSettingsClick('profile')">
-                  个人设置
-                </el-dropdown-item>
-                <el-dropdown-item @click="handleSettingsClick('appearance')">
-                  外观设置
-                </el-dropdown-item>
-                <el-dropdown-item divided @click="handleSettingsClick('logout')">
-                  退出登录
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-      </el-header>
-
-      <el-main class="main-content">
+      <!-- 主内容区 -->
+      <el-main class="volc-main">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component
@@ -209,8 +189,9 @@
 
         <!-- 版本信息 -->
         <div class="version-info">
-          <span>前端版本: {{ frontendVersion }}</span>
-          <span v-if="backendVersion" style="margin-left: 20px">后端版本: {{ backendVersion }}</span>
+          <span>前端: {{ frontendVersion }}</span>
+          <span v-if="backendVersion" class="divider">|</span>
+          <span v-if="backendVersion">后端: {{ backendVersion }}</span>
         </div>
       </el-main>
     </el-container>
@@ -220,27 +201,29 @@
 <script setup lang="ts">
 import { ref, computed, markRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Fold,
   Search,
-  Bell,
-  Setting,
+  QuestionFilled,
+  Document,
+  DocumentCopy,
+  UserFilled,
+  User,
+  ArrowDown,
+  SwitchButton,
+  Fold,
+  Expand,
   TrendCharts,
   Money,
   Tools,
   Management,
-  Document,
-  DataLine,
   ArrowRight,
   Calendar,
   List,
   Download,
   DataAnalysis,
-  DocumentCopy,
-  Management as Calculator,
-  User,
-  Rank
+  Notebook,
+  Reading
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { APP_VERSION } from '@/version'
@@ -264,21 +247,18 @@ let jsonToolsRef: any = null
 
 const setJsonToolsRef = (el: any) => {
   if (el) {
-    // 检查是否是JsonTools组件
     if (el.showExamples && el.clearAll) {
       jsonToolsRef = el
     }
   }
 }
 
-// 处理显示示例数据事件
 const handleShowExamples = () => {
   if (jsonToolsRef && typeof jsonToolsRef.showExamples === 'function') {
     jsonToolsRef.showExamples()
   }
 }
 
-// 处理清空内容事件
 const handleClearAll = () => {
   if (jsonToolsRef && typeof jsonToolsRef.clearAll === 'function') {
     jsonToolsRef.clearAll()
@@ -289,25 +269,23 @@ const handleClearAll = () => {
 const frontendVersion = ref(`${APP_VERSION.buildDate} ${APP_VERSION.buildTimeShort}`)
 const backendVersion = ref('')
 
-// 获取后端版本信息
 const fetchBackendVersion = async () => {
   try {
     const versionData: any = await request.get('/version')
     backendVersion.value = versionData.buildTime || '未知'
   } catch (error) {
     console.error('获取后端版本失败:', error)
-    backendVersion.value = '获取失败'
   }
 }
 
-// 页面加载时获取后端版本
 fetchBackendVersion()
 
-const sidebarCollapsed = ref(true)  // 默认收缩
+// 侧边栏状态
+const sidebarCollapsed = ref(false)
 const searchQuery = ref('')
-const expandedMenus = ref<string[]>([])  // 默认不展开任何菜单
+const expandedMenus = ref<string[]>(['stock', 'tools'])
 
-const sidebarWidth = computed(() => sidebarCollapsed.value ? '64px' : '240px')
+const sidebarWidth = computed(() => sidebarCollapsed.value ? '48px' : '200px')
 
 interface MenuItem {
   key: string
@@ -323,6 +301,27 @@ interface MenuSection {
 }
 
 const menuSections = ref<MenuSection[]>([
+  {
+    title: '内容管理',
+    items: [
+      {
+        key: 'blog',
+        label: '博客',
+        icon: markRaw(DocumentCopy),
+        children: [
+          { key: 'blog/list', label: '博客列表', icon: markRaw(List) }
+        ]
+      },
+      {
+        key: 'knowledge',
+        label: '知识库',
+        icon: markRaw(Notebook),
+        children: [
+          { key: 'knowledge/list', label: '知识库列表', icon: markRaw(Reading) }
+        ]
+      }
+    ]
+  },
   {
     title: '主要功能',
     items: [
@@ -343,8 +342,8 @@ const menuSections = ref<MenuSection[]>([
         label: '工具集',
         icon: markRaw(Tools),
         children: [
-          { key: 'tools/loan-calculator', label: '还贷计算器', icon: markRaw(Calculator) },
-          { key: 'tools/json', label: 'JSON工具', icon: markRaw(DocumentCopy) }
+          { key: 'tools/loan-calculator', label: '还贷计算器', icon: markRaw(Management) },
+          { key: 'tools/json', label: 'JSON工具', icon: markRaw(Document) }
         ]
       }
     ]
@@ -357,27 +356,21 @@ const menuSections = ref<MenuSection[]>([
         label: '后台管理',
         icon: markRaw(Management),
         children: [
-          { key: 'admin/dashboard', label: '管理首页', icon: markRaw(DataLine) },
+          { key: 'admin/dashboard', label: '管理首页', icon: markRaw(DataAnalysis) },
           { key: 'admin/users', label: '用户管理', icon: markRaw(User) },
-          { key: 'admin/scheduled-tasks', label: '定时任务', icon: markRaw(Setting) },
+          { key: 'admin/blog', label: '博客管理', icon: markRaw(DocumentCopy) },
+          { key: 'admin/knowledge', label: '知识库管理', icon: markRaw(Notebook) },
+          { key: 'admin/scheduled-tasks', label: '定时任务', icon: markRaw(TrendCharts) },
           { key: 'admin/system-logs', label: '日志管理', icon: markRaw(Document) }
         ]
       },
-      { key: 'config', label: '系统配置', icon: markRaw(Setting) }
-    ]
-  },
-  {
-    title: '其他',
-    items: [
-      { key: 'blog', label: '博客', icon: markRaw(Document) },
-      { key: 'analytics', label: '数据分析', icon: markRaw(DataLine) }
+      { key: 'config', label: '系统配置', icon: markRaw(TrendCharts) }
     ]
   }
 ])
 
-// Filter menu sections based on user login status
+// 根据登录状态过滤菜单
 const filteredMenuSections = computed(() => {
-  // If not logged in, only show the tools section
   if (!userStore.isLoggedIn) {
     return menuSections.value
       .map(section => ({
@@ -386,8 +379,6 @@ const filteredMenuSections = computed(() => {
       }))
       .filter(section => section.items.length > 0)
   }
-
-  // If logged in, show all menu sections
   return menuSections.value
 })
 
@@ -414,9 +405,11 @@ const isParentActive = (item: MenuItem) => {
 }
 
 const toggleSubmenu = (key: string) => {
-  // 如果侧边栏收缩，先展开侧边栏
   if (sidebarCollapsed.value) {
     sidebarCollapsed.value = false
+    if (!expandedMenus.value.includes(key)) {
+      expandedMenus.value.push(key)
+    }
     return
   }
 
@@ -429,447 +422,454 @@ const toggleSubmenu = (key: string) => {
 }
 
 const handleNavClick = (key: string) => {
-  console.log('[Navigation] Clicked menu item:', key)
   const path = `/${key}`
-  console.log('[Navigation] Navigating to:', path)
   router.push(path)
 }
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
+  // 收起时关闭所有子菜单
+  if (sidebarCollapsed.value) {
+    expandedMenus.value = []
+  }
 }
 
-const handleSettingsClick = (action: string) => {
-  console.log('Settings action:', action)
-}
-
-const handleLogout = async () => {
-  try {
-    await ElMessageBox.confirm(
-      '确定要退出登录吗？',
-      '退出登录',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+const handleUserAction = async (command: string) => {
+  switch (command) {
+    case 'profile':
+      ElMessage.info('个人设置功能开发中')
+      break
+    case 'blog':
+      router.push('/blog/list')
+      break
+    case 'logout':
+      try {
+        await ElMessageBox.confirm('确定要退出登录吗？', '退出登录', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        userStore.logout()
+        ElMessage.success('已退出登录')
+        router.push('/login')
+      } catch {
+        // User cancelled
       }
-    )
-
-    userStore.logout()
-    ElMessage.success('已退出登录')
-    router.push('/login')
-  } catch {
-    // User cancelled
+      break
   }
 }
 </script>
 
-<style scoped>
-.main-layout {
+<style scoped lang="scss">
+.volc-layout {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-}
-
-/* Sidebar Styles */
-.sidebar {
-  background: var(--color-bg-primary);
-  border-right: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
-  transition: width var(--transition-base);
-  overflow: hidden;
 }
 
-.sidebar-header {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.logo {
+/* 顶部导航栏 - 48px */
+.volc-navbar {
+  height: 48px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  z-index: 999;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #f7f8fa;
+  }
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--color-primary);
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 .logo-text {
-  font-family: var(--font-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d2129;
   white-space: nowrap;
 }
 
+.navbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  flex-shrink: 0;
+}
+
+.navbar-breadcrumb {
+  font-size: 14px;
+
+  :deep(.el-breadcrumb__item) {
+    .el-breadcrumb__inner {
+      color: #4e5969;
+      font-weight: 400;
+    }
+
+    &:last-child .el-breadcrumb__inner {
+      color: #1d2129;
+    }
+  }
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar-search {
+  width: 200px;
+
+  :deep(.el-input__wrapper) {
+    border-radius: 4px;
+  }
+}
+
+.navbar-link {
+  color: #4e5969;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #1d2129;
+    background: #f7f8fa;
+  }
+
+  .el-icon {
+    margin-right: 4px;
+  }
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f7f8fa;
+  }
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 400;
+  color: #1d2129;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-icon {
+  font-size: 12px;
+  color: #4e5969;
+}
+
+/* 主容器 */
+.main-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 左侧菜单栏 */
+.volc-sidebar {
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s cubic-bezier(0.34, 0.69, 0.1, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* 导航菜单 */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--spacing-md);
+  padding: 8px 0;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c9cdd4;
+    border-radius: 2px;
+  }
 }
 
-/* Collapsed state styles */
-.sidebar.collapsed .logo-text,
-.sidebar.collapsed .nav-text,
-.sidebar.collapsed .nav-badge,
-.sidebar.collapsed .submenu-arrow,
-.sidebar.collapsed .submenu,
-.sidebar.collapsed .nav-section-title {
-  display: none;
+.menu-section {
+  margin-bottom: 8px;
 }
 
-/* 侧边栏折叠时，登录提示只显示图标 */
-.sidebar.collapsed .not-logged-in {
-  padding: var(--spacing-sm);
+.menu-section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #86909c;
+  padding: 8px 16px 4px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-.sidebar.collapsed .login-text {
-  display: none;
-}
-
-.sidebar.collapsed .logged-in .user-info {
-  display: none;
-}
-
-.sidebar.collapsed .logo {
-  justify-content: center;
-}
-
-.sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: var(--spacing-sm);
-}
-
-.sidebar.collapsed .nav-icon {
-  margin: 0;
-}
-
-.sidebar.collapsed .user-profile {
-  justify-content: center;
-  padding: var(--spacing-sm);
-}
-
-.sidebar.collapsed .user-profile .el-avatar {
-  margin: 0;
-}
-
-.nav-section {
-  margin-bottom: var(--spacing-lg);
-}
-
-.nav-section-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-tertiary);
-  padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-}
-
-.nav-item {
+.menu-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-md);
-  margin-bottom: var(--spacing-xs);
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 0 16px;
+  margin: 0 8px;
+  height: 36px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  color: var(--color-text-secondary);
+  transition: all 0.2s;
+  color: #4e5969;
   position: relative;
+  user-select: none;
+
+  &:hover {
+    background: #f7f8fa;
+    color: #1d2129;
+  }
+
+  &.active {
+    background: #e8f3ff;
+    color: #3370ff;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background: #3370ff;
+      border-radius: 0 2px 2px 0;
+    }
+  }
 }
 
-.nav-item:hover {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-}
-
-.nav-item.active {
-  background: var(--color-primary-lighter);
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-.nav-icon {
-  width: 20px;
-  height: 20px;
+.menu-icon {
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  font-size: 16px;
 }
 
-.nav-text {
+.menu-text {
   flex: 1;
+  font-size: 14px;
   white-space: nowrap;
 }
 
-.nav-badge {
+.menu-badge {
   margin-left: auto;
 }
 
-/* Submenu Styles */
-.nav-item-parent {
-  position: relative;
+/* 父级菜单项 */
+.menu-item-parent {
+  .submenu-arrow {
+    margin-left: auto;
+    transition: transform 0.2s;
+    font-size: 12px;
+  }
+
+  &.expanded .submenu-arrow {
+    transform: rotate(90deg);
+  }
 }
 
-.submenu-arrow {
-  margin-left: auto;
-  transition: transform var(--transition-base);
-}
-
-.submenu-arrow.expanded {
-  transform: rotate(90deg);
-}
-
+/* 子菜单 */
 .submenu {
-  max-height: 0;
+  margin-left: 24px;
   overflow: hidden;
-  transition: max-height var(--transition-base);
-  padding-left: var(--spacing-lg);
+  transition: all 0.2s ease;
 }
 
-.submenu.expanded {
-  max-height: 500px;
+.menu-item-child {
+  padding: 0 16px 0 24px;
+  font-size: 14px;
+  color: #4e5969;
+
+  &::before {
+    display: none;
+  }
+
+  &:hover {
+    background: #f7f8fa;
+    color: #1d2129;
+  }
+
+  &.active {
+    background: #e8f3ff;
+    color: #3370ff;
+
+    &::before {
+      display: block;
+      left: 24px;
+    }
+  }
 }
 
-.nav-item-child {
-  padding: var(--spacing-xs) var(--spacing-md);
-  font-size: 0.875rem;
-  color: var(--color-text-tertiary);
-}
-
-.nav-item-child:hover {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-}
-
-.nav-item-child.active {
-  background: var(--color-primary-lightest);
-  color: var(--color-primary);
-}
-
-
+/* 底部折叠按钮 */
 .sidebar-footer {
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border-light);
+  padding: 8px;
+  border-top: 1px solid #e5e7eb;
   flex-shrink: 0;
 }
 
-.user-profile {
+.collapse-btn {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
+  gap: 6px;
   width: 100%;
-}
-
-.user-profile.logged-in {
+  padding: 6px;
+  color: #4e5969;
   cursor: pointer;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-size: 13px;
+
+  &:hover {
+    background: #f7f8fa;
+    color: #1d2129;
+  }
 }
 
-.user-profile.logged-in:hover {
-  background: var(--color-bg-secondary);
+.collapse-text {
+  font-size: 13px;
 }
 
-.user-profile.not-logged-in {
-  cursor: pointer;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
-  transition: all var(--transition-base);
-}
-
-.user-profile.not-logged-in:hover {
-  background: linear-gradient(135deg, #337ecc 0%, #409EFF 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-status {
-  font-size: 0.75rem;
-  color: var(--color-success);
-}
-
-/* 未登录时的登录提示 */
-.login-prompt {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  width: 100%;
-}
-
-.login-prompt .el-icon {
-  color: white;
-  flex-shrink: 0;
-}
-
-.login-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.login-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: white;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.login-subtitle {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Main Container */
-.main-container {
-  flex: 1;
-  overflow: hidden;
-}
-
-.main-header {
-  background: var(--color-bg-primary);
-  border-bottom: 1px solid var(--color-border-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--spacing-lg);
-  height: 64px;
-}
-
-.header-left,
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.sidebar-toggle {
-  flex-shrink: 0;
-}
-
-/* JSON工具导航栏样式 */
-.json-tools-header {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-shrink: 0;
-
-  .json-tools-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    white-space: nowrap;
-
-    .title-icon {
-      font-size: 24px;
-      color: var(--color-primary);
-    }
+/* 收起状态样式 */
+.volc-sidebar.collapsed {
+  .menu-section-title {
+    display: none;
   }
 
-  .json-tools-nav {
-    display: flex;
-    align-items: stretch;
-    gap: 8px;
-    flex-shrink: 0;
-    align-self: stretch;
-    height: 100%;
+  .menu-text,
+  .menu-badge,
+  .submenu-arrow,
+  .collapse-text {
+    display: none;
+  }
 
-    .nav-item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 0 16px;
-      height: 100%;
-      min-height: 44px;
-      font-size: 14px;
-      color: var(--color-text-secondary);
-      background: transparent;
-      border: none;
+  .menu-item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .menu-item-child {
+    padding: 0;
+    justify-content: center;
+  }
+
+  // 悬浮菜单 - 仅在hover父菜单时显示
+  .menu-item-parent {
+    .submenu {
+      position: fixed;
+      left: 48px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
       border-radius: 4px;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      user-select: none;
+      padding: 4px 0;
+      min-width: 140px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
 
-      .el-icon {
-        font-size: 14px;
-        flex-shrink: 0;
+      .menu-item {
+        padding: 0 16px;
+        justify-content: flex-start;
       }
+    }
 
-      span {
-        white-space: nowrap;
-      }
-
-      &:hover {
-        color: var(--color-primary);
-        background: var(--color-primary-lighter);
-      }
-
-      &.active {
-        color: var(--color-primary);
-        background: var(--color-primary-lighter);
-        font-weight: 500;
-      }
+    &:hover .submenu {
+      opacity: 1;
+      visibility: visible;
     }
   }
 }
 
-.search-input {
-  width: 240px;
-}
-
-.header-btn {
-  flex-shrink: 0;
-}
-
-.main-content {
-  background: var(--color-bg-secondary);
+/* 主内容区 */
+.volc-main {
+  background: #f7f8fa;
   overflow-y: auto;
-  padding: var(--spacing-xl);
-  position: relative;
+  padding: 16px;
+  flex: 1;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c9cdd4;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #9daec2;
+  }
 }
 
 .version-info {
   margin-top: auto;
-  padding-top: var(--spacing-lg);
+  padding-top: 16px;
   text-align: center;
-  font-size: 0.75rem;
-  color: var(--color-text-tertiary);
-  border-top: 1px solid var(--color-border-light);
+  font-size: 12px;
+  color: #86909c;
+  border-top: 1px solid #e5e7eb;
+
+  span {
+    margin: 0 4px;
+  }
+
+  .divider {
+    color: #c9cdd4;
+  }
 }
 
-/* Transitions */
+/* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity var(--transition-base);
+  transition: opacity 0.15s ease;
 }
 
 .fade-enter-from,
@@ -877,27 +877,48 @@ const handleLogout = async () => {
   opacity: 0;
 }
 
-/* Responsive */
+.submenu-enter-active,
+.submenu-leave-active {
+  transition: all 0.2s ease;
+}
+
+.submenu-enter-from,
+.submenu-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.submenu-enter-to,
+.submenu-leave-from {
+  opacity: 1;
+  max-height: 500px;
+}
+
+/* 响应式 */
 @media (max-width: 768px) {
-  .sidebar {
+  .volc-sidebar {
     position: fixed;
     left: 0;
-    top: 0;
+    top: 48px;
     bottom: 0;
-    z-index: var(--z-fixed);
+    z-index: 998;
     transform: translateX(-100%);
+
+    &:not(.collapsed) {
+      transform: translateX(0);
+    }
   }
 
-  .sidebar.mobile-open {
-    transform: translateX(0);
+  .navbar-search {
+    width: 140px;
   }
 
-  .search-input {
-    width: 160px;
+  .user-name {
+    display: none;
   }
 
-  .main-content {
-    padding: var(--spacing-md);
+  .volc-main {
+    padding: 12px;
   }
 }
 </style>
