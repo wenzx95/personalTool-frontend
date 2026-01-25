@@ -199,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, markRaw } from 'vue'
+import { ref, computed, markRaw, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -228,6 +228,8 @@ import {
 import { useUserStore } from '@/stores/user'
 import { APP_VERSION } from '@/version'
 import request from '@/api/request'
+import { getUserMenus } from '@/api/menu'
+import { detectDeviceType } from '@/utils/deviceType'
 
 const router = useRouter()
 const route = useRoute()
@@ -368,6 +370,88 @@ const menuSections = ref<MenuSection[]>([
     ]
   }
 ])
+
+// 获取动态菜单（从后端根据设备类型获取）
+const fetchDynamicMenus = async () => {
+  if (!userStore.isLoggedIn) {
+    return
+  }
+
+  try {
+    // 自动识别设备类型并获取对应菜单
+    const deviceType = detectDeviceType()
+    const menus = await getUserMenus(deviceType)
+
+    // 将后端返回的菜单转换为MenuItem格式
+    const transformedMenus = transformToMenuItems(menus)
+
+    // 更新menuSections（如果后端返回了菜单，则使用动态菜单）
+    if (transformedMenus.length > 0) {
+      menuSections.value = transformedMenus
+      console.log('已加载动态菜单，设备类型:', deviceType)
+    }
+  } catch (error) {
+    console.warn('获取动态菜单失败，使用降级方案（硬编码菜单）', error)
+    // 降级：使用硬编码菜单，不更新menuSections
+  }
+}
+
+// 将后端菜单格式转换为前端MenuItem格式
+const transformToMenuItems = (menus: any[]): MenuSection[] => {
+  if (!menus || menus.length === 0) {
+    return []
+  }
+
+  const sections: MenuSection[] = []
+  const rootMenus = menus.filter(m => m.parentId === 0)
+
+  rootMenus.forEach(rootMenu => {
+    const children: MenuItem[] = []
+
+    if (rootMenu.children && rootMenu.children.length > 0) {
+      rootMenu.children.forEach((child: any) => {
+        children.push({
+          key: child.path || `menu-${child.id}`,
+          label: child.name,
+          icon: markRaw(Management), // 可以根据child.icon动态设置
+          children: transformChildren(child.children)
+        })
+      })
+    }
+
+    sections.push({
+      title: rootMenu.name,
+      items: children.length > 0 ? children : [{
+        key: rootMenu.path || `menu-${rootMenu.id}`,
+        label: rootMenu.name,
+        icon: markRaw(Management)
+      }]
+    })
+  })
+
+  return sections
+}
+
+// 递归转换子菜单
+const transformChildren = (children: any[]): MenuItem[] => {
+  if (!children || children.length === 0) {
+    return []
+  }
+
+  return children.map(child => ({
+    key: child.path || `menu-${child.id}`,
+    label: child.name,
+    icon: markRaw(Management),
+    children: transformChildren(child.children)
+  }))
+}
+
+// 在用户登录后加载动态菜单
+watch(() => userStore.isLoggedIn, (isLoggedIn) => {
+  if (isLoggedIn) {
+    fetchDynamicMenus()
+  }
+}, { immediate: true })
 
 // 根据登录状态过滤菜单
 const filteredMenuSections = computed(() => {

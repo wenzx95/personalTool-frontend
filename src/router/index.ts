@@ -114,6 +114,12 @@ const router = createRouter({
               meta: { title: '用户管理' }
             },
             {
+              path: 'system/menus',
+              name: 'MenuManagement',
+              component: () => import('@/views/admin/system/MenuCRUD.vue'),
+              meta: { title: '菜单管理' }
+            },
+            {
               path: 'scheduled-tasks',
               name: 'ScheduledTasks',
               component: () => import('@/views/admin/ScheduledTasks.vue'),

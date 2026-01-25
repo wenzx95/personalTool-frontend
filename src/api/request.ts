@@ -24,8 +24,20 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   (response) => {
-    // 直接返回响应数据
-    return response.data
+    // 如果后端返回的是Result格式，提取data字段
+    const { data } = response
+    if (data && typeof data === 'object' && 'code' in data) {
+      // 成功响应(code=200)，返回data字段
+      if (data.code === 200) {
+        return data.data
+      }
+      // 错误响应，显示错误消息
+      const errorMsg = data.message || '请求失败'
+      ElMessage.error(errorMsg)
+      return Promise.reject(new Error(errorMsg))
+    }
+    // 直接返回响应数据（用于非Result格式响应）
+    return data
   },
   (error) => {
     // Handle 401 Unauthorized - token expired or invalid
