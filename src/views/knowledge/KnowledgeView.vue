@@ -394,7 +394,7 @@ onMounted(() => {
 .knowledge-view-page {
   min-height: 100vh;
   background: #f5f7fa;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* 知识库头部 */
@@ -521,7 +521,7 @@ onMounted(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 20px;
-  height: 500px;
+  height: 350px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
