@@ -368,7 +368,7 @@ onMounted(() => {
 /* 响应式 */
 @media (max-width: 768px) {
   .blog-list-container {
-    padding: 20px 16px;
+    padding: 20px 12px;
   }
 
   .blog-title {

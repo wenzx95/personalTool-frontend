@@ -859,4 +859,11 @@ onMounted(() => {
   color: #909399;
   margin-top: 4px;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .scheduled-tasks {
+    padding: 12px;
+  }
+}
 </style>

@@ -588,4 +588,30 @@ onMounted(() => {
 .el-table :deep(.el-table__body tr:hover > td) {
   background-color: #f5f7fa;
 }
+
+/* 操作列优化 - 防止按钮换行 */
+.el-table :deep(.el-table__cell) {
+  .el-button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .el-button + .el-button {
+    margin-left: 4px;
+  }
+}
+
+/* 确保操作列有足够的空间 */
+.el-table :deep(.el-table__header th):last-child,
+.el-table :deep(.el-table__body td):last-child {
+  min-width: 220px;
+  padding: 12px 16px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 12px;
+  }
+}
 </style>

@@ -638,7 +638,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 12px;
   }
 
   .header-left {

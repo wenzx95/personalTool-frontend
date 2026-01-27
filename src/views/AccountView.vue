@@ -14,5 +14,12 @@
 .account-view {
   padding: 20px;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .account-view {
+    padding: 12px;
+  }
+}
 </style>
 

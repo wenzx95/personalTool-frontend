@@ -58,9 +58,129 @@
       </el-row>
     </div>
 
-    <!-- Table -->
+    <!-- Table / Cards -->
     <div class="table-section">
+      <!-- 移动端卡片布局 -->
+      <div v-if="isMobile" class="mobile-cards" v-loading="loading">
+        <div
+          v-for="record in displayedReviewList"
+          :key="record.id"
+          class="record-card"
+        >
+          <!-- 卡片头部 -->
+          <div class="card-header">
+            <div class="date-info">
+              <span class="date">{{ record.date }}</span>
+              <el-tag
+                v-if="record.market_strength"
+                :type="getMarketStrengthTagType(record.market_strength)"
+                size="small"
+              >
+                {{ record.market_strength }}
+              </el-tag>
+            </div>
+            <span class="volume">{{ formatVolume(record.volume) }}</span>
+          </div>
+
+          <!-- 卡片主体 - 关键指标 -->
+          <div class="card-metrics">
+            <div class="metric-item">
+              <span class="metric-label">红盘</span>
+              <span class="metric-value text-red">{{ record.red_count }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">绿盘</span>
+              <span class="metric-value text-green">{{ record.green_count }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">涨停</span>
+              <span class="metric-value">{{ record.limit_up_count }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">连板率</span>
+              <span class="metric-value">{{ record.continuous_limit_rate }}%</span>
+            </div>
+          </div>
+
+          <!-- 高级数据（折叠） -->
+          <el-collapse v-model="activeCollapse" class="card-collapse">
+            <el-collapse-item title="查看更多数据" name="more">
+              <div class="advanced-metrics">
+                <div class="advanced-row">
+                  <span class="adv-label">跌停</span>
+                  <span class="adv-value">{{ record.limit_down_count }}</span>
+                </div>
+                <div class="advanced-row">
+                  <span class="adv-label">2板</span>
+                  <span class="adv-value text-orange">{{ record.second_board_count || 0 }}</span>
+                </div>
+                <div class="advanced-row">
+                  <span class="adv-label">3板</span>
+                  <span class="adv-value text-orange">{{ record.third_board_count || 0 }}</span>
+                </div>
+                <div class="advanced-row">
+                  <span class="adv-label">4板+</span>
+                  <span class="adv-value text-orange">{{ record.four_plus_count || 0 }}</span>
+                </div>
+                <div class="advanced-row">
+                  <span class="adv-label">炸板</span>
+                  <span class="adv-value">{{ record.zt_count }} ({{ record.zt_rate }}%)</span>
+                </div>
+
+                <!-- 4板+个股 -->
+                <div v-if="record.four_plus_stocks_with_sector && record.four_plus_stocks_with_sector.length > 0" class="stocks-section">
+                  <div class="adv-label-full">4板+个股</div>
+                  <div class="stocks-list">
+                    <div
+                      v-for="stock in record.four_plus_stocks_with_sector"
+                      :key="stock.name"
+                      class="stock-item"
+                    >
+                      <span class="stock-name">{{ stock.name }}</span>
+                      <el-tag size="small" type="warning">{{ stock.sector }}</el-tag>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 流入板块 -->
+                <div v-if="record.hot_sectors && record.hot_sectors.length > 0" class="sectors-section">
+                  <div class="adv-label-full">流入板块</div>
+                  <div class="sectors-list">
+                    <el-tag
+                      v-for="(sector, index) in record.hot_sectors"
+                      :key="index"
+                      size="small"
+                      type="primary"
+                      plain
+                    >
+                      {{ sector }}
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
+
+          <!-- 卡片底部操作 -->
+          <div class="card-actions">
+            <el-button size="small" type="primary" @click="viewDetail(record)">
+              查看详情
+            </el-button>
+            <el-button size="small" @click="editReview(record)">
+              编辑
+            </el-button>
+            <el-popconfirm title="确认删除？" @confirm="handleDelete(record.id!)">
+              <template #reference>
+                <el-button size="small" type="danger">删除</el-button>
+              </template>
+            </el-popconfirm>
+          </div>
+        </div>
+      </div>
+
+      <!-- 桌面端表格布局 -->
       <el-table
+        v-else
         :data="displayedReviewList"
         stripe
         v-loading="loading"
@@ -301,7 +421,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -313,6 +433,23 @@ import {
 } from '@/api/market'
 
 const router = useRouter()
+
+// 移动端检测
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 const loading = ref(false)
 const submitLoading = ref(false)
 const loadingMore = ref(false)
@@ -320,6 +457,7 @@ const reviewList = ref<MarketReviewData[]>([])
 const searchQuery = ref('')
 const marketStrengthFilter = ref('')
 const dateRange = ref<[string, string] | null>(null)
+const activeCollapse = ref<string[]>([])
 
 // 分页状态
 const pageSize = 30
@@ -665,5 +803,242 @@ watch([searchQuery, marketStrengthFilter, dateRange], () => {
 
 .no-more-tag {
   font-size: 0.875rem;
+}
+
+/* 移动端卡片样式 */
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.record-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.date-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.volume {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.card-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  background: #f7f8fa;
+  border-radius: 8px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #86909c;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.card-collapse {
+  margin: 12px 0;
+  border: none;
+}
+
+.advanced-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.advanced-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f7f8fa;
+  border-radius: 6px;
+}
+
+.adv-label {
+  font-size: 14px;
+  color: #86909c;
+}
+
+.adv-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d2129;
+}
+
+.adv-label-full {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d2129;
+  margin-bottom: 8px;
+}
+
+.stocks-section,
+.sectors-section {
+  margin-top: 8px;
+}
+
+.stocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stock-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fff7e6;
+  border-radius: 6px;
+}
+
+.stock-name {
+  font-weight: 500;
+  color: #1d2129;
+}
+
+.sectors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+
+  .el-button {
+    flex: 1;
+  }
+}
+
+/* 移动端响应式优化 */
+@media (max-width: 768px) {
+  /* 页面容器优化 */
+  .review-records {
+    padding: 12px;
+  }
+
+  /* 移动端筛选区域优化 */
+  .filters-section {
+    padding: 12px;
+
+    /* 强制el-row变成垂直布局 */
+    :deep(.el-row) {
+      flex-direction: column !important;
+      display: flex !important;
+      gap: 12px !important;
+    }
+
+    /* 强制所有el-col占满宽度 */
+    :deep(.el-col) {
+      width: 100% !important;
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      margin-bottom: 12px;
+    }
+
+    /* 搜索框全宽 */
+    :deep(.el-input) {
+      width: 100% !important;
+    }
+
+    :deep(.el-input__wrapper) {
+      width: 100% !important;
+    }
+
+    /* 选择器全宽 */
+    :deep(.el-select) {
+      width: 100% !important;
+    }
+
+    :deep(.el-select__wrapper) {
+      width: 100% !important;
+    }
+
+    /* 日期选择器全宽 */
+    :deep(.el-date-editor) {
+      width: 100% !important;
+    }
+
+    /* 按钮组优化 */
+    :deep(.el-col:last-child) {
+      display: flex !important;
+      gap: 8px !important;
+
+      .el-button {
+        flex: 1;
+        min-height: 44px;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .card-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 移动端卡片按钮优化 */
+  .card-actions {
+    .el-button {
+      min-height: 44px;
+      font-size: 16px;
+    }
+  }
+
+  /* 移动端折叠面板按钮优化 */
+  .el-collapse-item__header {
+    min-height: 44px;
+    font-size: 16px;
+  }
 }
 </style>

@@ -1,0 +1,428 @@
+// 移动端和PWA全局样式
+// 安全区域适配（刘海屏）
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+// Standalone模式全局样式
+html.standalone-mode {
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+
+  body {
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+}
+
+// 触摸优化（仅移动端）
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+// iPhone 15 Pro (393px) 适配 - 原生App风格优化
+@media (max-width: 430px) {
+  // 移动端按钮最小点击区域（iOS推荐44px）
+  button,
+  .el-button,
+  .menu-item,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // 移动端输入框优化（防止iOS自动缩放）
+  input,
+  textarea,
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 16px !important;
+  }
+  // 全局页面容器优化 - 增加边距
+  body,
+  #app {
+    min-height: 100vh;
+    min-height: 100dvh; // 动态视口高度
+  }
+
+  // 主内容区域 - 增加左右边距（原生App标准）
+  .main-container,
+  > div,
+  > section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  // 页面内容优化
+  main,
+  .page-content,
+  .el-main {
+    padding: 16px !important;
+  }
+
+  // 页面标题区域优化
+  .page-header {
+    padding: 20px 16px 16px !important;
+    margin-bottom: 12px !important;
+
+    .page-title {
+      font-size: 28px !important;
+      line-height: 1.2 !important;
+      margin-bottom: 4px !important;
+    }
+
+    .page-subtitle {
+      font-size: 15px !important;
+      line-height: 1.4 !important;
+    }
+  }
+
+  // 对话框移动端适配 - 原生弹窗风格
+  .el-dialog {
+    width: calc(100vw - 32px) !important;
+    margin: 16px auto !important;
+    border-radius: 16px !important;
+
+    .el-dialog__header {
+      padding: 20px 20px 12px !important;
+
+      .el-dialog__title {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+      }
+    }
+
+    .el-dialog__body {
+      padding: 0 20px 20px !important;
+      max-height: 70vh;
+      overflow-y: auto;
+      font-size: 16px !important;
+      line-height: 1.5 !important;
+    }
+
+    .el-dialog__footer {
+      padding: 12px 20px 20px !important;
+      border-top: 1px solid var(--color-border-light) !important;
+
+      .el-button {
+        flex: 1;
+        height: 48px !important;
+        font-size: 16px !important;
+        border-radius: 12px !important;
+        margin: 0 4px !important;
+      }
+    }
+  }
+
+  // 抽屉移动端优化 - 原生侧边栏风格
+  .el-drawer {
+    width: calc(100vw - 32px) !important;
+    max-width: 400px !important;
+
+    .el-drawer__header {
+      padding: 20px 20px 12px !important;
+      margin-bottom: 0 !important;
+
+      .el-drawer__title {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+      }
+    }
+
+    .el-drawer__body {
+      padding: 0 20px 20px !important;
+      font-size: 16px !important;
+    }
+  }
+
+  // 表单移动端优化 - 原生表单风格
+  .el-form {
+    .el-form-item {
+      margin-bottom: 20px !important;
+
+      .el-form-item__label {
+        height: auto !important;
+        line-height: 1.4 !important;
+        padding-bottom: 8px !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        color: var(--color-text-secondary) !important;
+      }
+
+      .el-form-item__content {
+        font-size: 16px !important;
+      }
+    }
+  }
+
+  // 输入框移动端优化
+  .el-input {
+    .el-input__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    .el-input__inner {
+      height: 48px !important;
+      line-height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 12px !important;
+      padding: 0 16px !important;
+    }
+  }
+
+  // 下拉框移动端优化
+  .el-select {
+    .el-select__wrapper {
+      height: 48px !important;
+      min-height: 48px !important;
+      font-size: 16px !important;
+      line-height: 48px !important;
+      padding: 0 16px !important;
+    }
+
+    .el-select__input {
+      height: 48px !important;
+      line-height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    .el-select__selected-item {
+      font-size: 16px !important;
+      line-height: 48px !important;
+    }
+  }
+
+  // 日期选择器移动端优化
+  .el-date-editor {
+    height: 48px !important;
+    min-height: 48px !important;
+
+    &.el-input__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      line-height: 48px !important;
+    }
+
+    .el-input__inner {
+      height: 48px !important;
+      line-height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    .el-range-input {
+      height: 48px !important;
+      line-height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    &.el-date-editor--daterange {
+      .el-input__wrapper {
+        height: 48px !important;
+      }
+    }
+  }
+
+  // 文本域移动端优化
+  .el-textarea {
+    .el-textarea__inner {
+      font-size: 16px !important;
+      line-height: 1.5 !important;
+      border-radius: 12px !important;
+      padding: 12px 16px !important;
+      min-height: 100px !important;
+    }
+  }
+
+  // 表格移动端优化 - 原生列表风格
+  .el-table {
+    font-size: 15px !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+
+    .el-table__header th {
+      padding: 12px 8px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      background-color: var(--color-bg-secondary) !important;
+    }
+
+    .el-table__body td {
+      padding: 12px 8px !important;
+      font-size: 15px !important;
+    }
+
+    .el-table__row {
+      &:not(:last-child) {
+        td {
+          border-bottom: 1px solid var(--color-border-light) !important;
+        }
+      }
+    }
+  }
+
+  // 卡片移动端优化 - 原生卡片风格
+  .el-card,
+  .card,
+  .bento-card {
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+
+    .el-card__header {
+      padding: 16px 20px !important;
+
+      .card-title {
+        font-size: 17px !important;
+        font-weight: 600 !important;
+      }
+    }
+
+    .el-card__body,
+    .card-body {
+      padding: 20px !important;
+      font-size: 15px !important;
+      line-height: 1.5 !important;
+    }
+
+    .card-footer {
+      padding: 16px 20px !important;
+      margin-top: 12px !important;
+    }
+  }
+
+  // 按钮组移动端优化
+  .el-button-group {
+    .el-button {
+      height: 44px !important;
+      padding: 0 16px !important;
+      font-size: 15px !important;
+      border-radius: 12px !important;
+    }
+  }
+
+  // 分页移动端优化
+  .el-pagination {
+    .el-pagination__sizes,
+    .el-pagination__jump {
+      display: none;
+    }
+
+    .el-pager li {
+      min-width: 36px !important;
+      height: 36px !important;
+      line-height: 36px !important;
+      font-size: 15px !important;
+      border-radius: 8px !important;
+    }
+
+    button {
+      height: 36px !important;
+      min-width: 36px !important;
+      border-radius: 8px !important;
+    }
+  }
+
+  // 标签移动端优化
+  .el-tag {
+    height: auto !important;
+    padding: 6px 12px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    line-height: 1.4 !important;
+  }
+
+  // 空状态移动端优化
+  .el-empty {
+    padding: 48px 20px !important;
+
+    .el-empty__description {
+      font-size: 15px !important;
+      margin-top: 16px !important;
+    }
+
+    .el-button {
+      margin-top: 20px !important;
+    }
+  }
+
+  // 加载状态移动端优化
+  .el-loading-mask {
+    .el-loading-spinner {
+      .circular {
+        width: 42px !important;
+        height: 42px !important;
+      }
+
+      .el-loading-text {
+        font-size: 15px !important;
+        margin-top: 12px !important;
+      }
+    }
+  }
+
+  // 消息提示移动端优化
+  .el-message {
+    min-width: auto !important;
+    width: calc(100vw - 64px) !important;
+    max-width: 360px !important;
+    padding: 16px 20px !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+
+    .el-message__icon {
+      font-size: 20px !important;
+    }
+  }
+
+  // 通知移动端优化
+  .el-notification {
+    width: calc(100vw - 64px) !important;
+    max-width: 380px !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+
+    .el-notification__group {
+      font-size: 15px !important;
+    }
+
+    .el-notification__title {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      margin-bottom: 4px !important;
+    }
+  }
+}
+
+// Standalone模式特有样式
+html.standalone-mode {
+  @media (max-width: 430px) {
+    // 导航栏适配安全区域
+    .volc-navbar {
+      padding-top: var(--safe-area-inset-top);
+      height: calc(48px + var(--safe-area-inset-top));
+    }
+
+    // 侧边栏适配安全区域
+    .volc-sidebar {
+      top: calc(48px + var(--safe-area-inset-top));
+      bottom: calc(0px + var(--safe-area-inset-bottom));
+    }
+
+    // 移动端遮罩层适配
+    .mobile-overlay {
+      top: calc(48px + var(--safe-area-inset-top));
+    }
+  }
+}

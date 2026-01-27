@@ -602,5 +602,35 @@ calculate()
   .summary-cards {
     grid-template-columns: 1fr;
   }
+
+  /* 移动端按钮优化 */
+  .page-header {
+    .el-button {
+      min-height: 48px;
+      padding: 0 20px;
+      font-size: 15px;
+    }
+  }
+
+  /* 表单按钮 */
+  .el-form-item {
+    .el-button {
+      width: 100%;
+      min-height: 48px;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+  }
+
+  /* 卡片区域 */
+  .summary-card,
+  .comparison-card,
+  .chart-card,
+  .tips-card {
+    .el-button {
+      min-height: 48px;
+      font-size: 15px;
+    }
+  }
 }
 </style>

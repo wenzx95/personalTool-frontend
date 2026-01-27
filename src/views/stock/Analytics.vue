@@ -486,6 +486,11 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  /* 页面容器优化 */
+  .analytics {
+    padding: 12px;
+  }
+
   .summary-cards {
     grid-template-columns: 1fr;
   }

@@ -142,6 +142,12 @@ const router = createRouter({
           // 如果遇到404错误，请确保后端已部署最新的代码
         },
         {
+          path: 'profile',
+          name: 'Profile',
+          component: () => import('@/views/ProfileView.vue'),
+          meta: { title: '我的', requiresAuth: false, hideFromMenu: true }
+        },
+        {
           path: 'json',
           name: 'Json',
           component: () => import('@/views/JsonView.vue'),
@@ -308,6 +314,13 @@ router.beforeEach((to, _from, next) => {
   // Knowledge pages are always accessible (no login required)
   if (to.path.startsWith('/knowledge')) {
     console.log('[Router Guard] Knowledge page - allowing access')
+    next()
+    return
+  }
+
+  // Profile page is always accessible (shows login prompt if not logged in)
+  if (to.path === '/profile') {
+    console.log('[Router Guard] Profile page - allowing access')
     next()
     return
   }

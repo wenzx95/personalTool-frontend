@@ -511,4 +511,71 @@ onMounted(() => {
     font-size: 14px;
   }
 }
+
+/* 移动端表格优化 */
+@media (max-width: 640px) {
+  .stats-cards {
+    :deep(.el-col) {
+      margin-bottom: 12px;
+    }
+  }
+
+  /* 移动端隐藏部分表格列 */
+  .activity-section {
+    :deep(.el-table) {
+      font-size: 12px;
+
+      .el-table__cell {
+        padding: 8px 4px;
+      }
+
+      /* 隐藏描述列 */
+      .el-table_1_column_4 {
+        display: none;
+      }
+    }
+  }
+
+  /* 管理卡片优化 */
+  .management-card {
+    .card-content {
+      padding: var(--spacing-sm);
+    }
+
+    .card-icon {
+      font-size: 24px;
+      margin-right: 12px;
+    }
+
+    .card-title {
+      font-size: 15px;
+    }
+
+    .card-description {
+      font-size: 11px;
+    }
+  }
+
+  /* 统计卡片优化 */
+  .stat-card {
+    padding: var(--spacing-md);
+
+    .stat-icon {
+      font-size: 20px;
+      margin-right: 12px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+    }
+
+    .stat-trend {
+      font-size: 12px;
+    }
+  }
+}
 </style>

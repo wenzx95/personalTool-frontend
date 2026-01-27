@@ -94,7 +94,7 @@
       <div class="dashboard-card transaction-card">
         <div class="card-header">
           <h3 class="card-title">最近记录</h3>
-          <el-button text type="primary" size="small">查看全部</el-button>
+          <el-button text type="primary">查看全部</el-button>
         </div>
         <div class="card-body">
           <div class="transaction-list">
@@ -676,6 +676,84 @@ const exportReport = () => {
 
   .chart-card {
     grid-column: span 1;
+  }
+
+  /* 移动端优化 */
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+
+    .el-button {
+      width: 100%;
+      min-height: 48px;
+      font-size: 15px;
+    }
+  }
+
+  /* 移动端卡片优化 */
+  .summary-card {
+    padding: var(--spacing-md);
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+
+  .card-value {
+    font-size: 1.25rem;
+  }
+
+  /* 移动端图表优化 */
+  .dashboard-card {
+    padding: var(--spacing-md);
+  }
+
+  .card-body {
+    height: 220px;
+  }
+
+  .chart-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+
+    .el-radio-group {
+      width: 100%;
+
+      .el-radio-button {
+        flex: 1;
+      }
+    }
+  }
+
+  /* 交易列表优化 */
+  .transaction-item {
+    padding: var(--spacing-sm);
+  }
+
+  .transaction-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* 预算进度优化 */
+  .budget-item {
+    gap: var(--spacing-xs);
+  }
+
+  .budget-header {
+    font-size: 0.8125rem;
+  }
+
+  :deep(.el-progress__text) {
+    font-size: 12px !important;
   }
 }
 </style>

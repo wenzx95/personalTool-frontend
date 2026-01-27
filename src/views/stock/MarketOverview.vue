@@ -440,6 +440,11 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  /* 页面容器优化 */
+  .market-overview {
+    padding: 12px;
+  }
+
   .bento-grid {
     grid-template-columns: 1fr;
   }

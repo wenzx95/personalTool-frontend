@@ -289,32 +289,6 @@
       </el-space>
     </div>
 
-    <!-- 统计信息栏 -->
-    <div v-if="parsedData" class="stats-bar">
-      <div class="stats-item">
-        <el-icon><DataLine /></el-icon>
-        <span class="stats-label">字符数：</span>
-        <span class="stats-value">{{ formatNumber(inputJson.length) }}</span>
-      </div>
-      <div class="stats-divider"></div>
-      <div class="stats-item">
-        <el-icon><Files /></el-icon>
-        <span class="stats-label">节点数：</span>
-        <span class="stats-value">{{ formatNumber(countNodes(parsedData)) }}</span>
-      </div>
-      <div class="stats-divider"></div>
-      <div class="stats-item">
-        <el-icon><List /></el-icon>
-        <span class="stats-label">深度：</span>
-        <span class="stats-value">{{ getDepth(parsedData) }}</span>
-      </div>
-      <div class="stats-divider"></div>
-      <div class="stats-item">
-        <el-icon><Clock /></el-icon>
-        <span class="stats-label">格式化用时：</span>
-        <span class="stats-value">{{ formatTime }}ms</span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -1520,7 +1494,7 @@ defineExpose({
   overflow: hidden;
 
   &.left-collapsed {
-    grid-template-columns: 220px 0 1.2fr;
+    grid-template-columns: 220px 0 1fr;
 
     .left-panel {
       width: 0;
@@ -1593,9 +1567,9 @@ defineExpose({
 
 .panel-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 12px 16px;
   border-bottom: 1px solid #e4e7ed;
   background: #fafbfc;
@@ -1610,7 +1584,7 @@ defineExpose({
 }
 
 .cases-source-switcher {
-  align-self: flex-end;
+  /* 移除 align-self: flex-end，让按钮组垂直居中 */
 }
 
 .panel-body {
@@ -1759,6 +1733,7 @@ defineExpose({
 .cases-panel {
   min-width: 220px;
   max-width: 220px;
+  transition: all 0.3s ease;
 }
 
 .cases-body {

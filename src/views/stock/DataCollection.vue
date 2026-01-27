@@ -807,4 +807,12 @@ watch(selectedDate, (newValue) => {
   font-weight: 600;
   color: var(--color-text-primary);
 }
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  /* 页面容器优化 */
+  .data-collection {
+    padding: 12px;
+  }
+}
 </style>

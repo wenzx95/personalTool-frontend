@@ -221,7 +221,11 @@ const handleAdd = () => {
 const handleEdit = (row: MenuDTO) => {
   isEdit.value = true
   dialogTitle.value = '编辑菜单'
-  formData.value = { ...row }
+  formData.value = {
+    ...row,
+    // 确保 deviceTypes 是数组（后端可能返回 null）
+    deviceTypes: row.deviceTypes || []
+  }
   dialogVisible.value = true
 }
 
@@ -308,6 +312,13 @@ onMounted(() => {
     margin-top: 5px;
     font-size: 12px;
     color: #909399;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .menu-crud-page {
+    padding: 12px;
   }
 }
 </style>

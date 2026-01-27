@@ -594,4 +594,11 @@ onMounted(() => {
 .data-table :deep(.el-table__body tr:hover > td) {
   background-color: #f5f7fa;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .config-view {
+    padding: 12px;
+  }
+}
 </style>

@@ -94,7 +94,39 @@ defineExpose({
 // ========== 响应式 ==========
 @media (max-width: 768px) {
   .tools-content {
-    padding: 16px;
+    padding: 12px;
+  }
+
+  // 移动端按钮优化 - 使用:deep()穿透scoped
+  :deep(.el-button) {
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  // 移动端文本域优化
+  :deep(.el-textarea__inner) {
+    font-size: 16px !important;
+  }
+
+  // 移动端按钮组优化
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    :deep(.el-button) {
+      width: 100%;
+    }
+  }
+
+  // 案例列表按钮组
+  .case-buttons {
+    :deep(.el-button) {
+      height: 44px !important;
+      min-height: 44px !important;
+      font-size: 16px !important;
+    }
   }
 }
 </style>
