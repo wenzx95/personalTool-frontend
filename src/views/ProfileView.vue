@@ -449,4 +449,428 @@ onMounted(() => {
     }
   }
 }
+
+/* ============================================================
+   移动端优化（平板和手机）
+   ============================================================ */
+@media (max-width: 768px) {
+  .profile-view {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); // 底部Tab导航 + 安全区域
+  }
+
+  // 未登录状态优化
+  .not-logged-in {
+    min-height: calc(100vh - 76px - env(safe-area-inset-bottom, 0px));
+    padding: 16px;
+
+    .login-prompt {
+      padding: 48px 24px;
+      border-radius: 16px;
+
+      .el-icon {
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        font-size: 15px;
+        margin-bottom: 28px;
+      }
+
+      .el-button {
+        width: 100%;
+        max-width: 280px;
+        height: 50px;
+        font-size: 17px;
+        border-radius: 12px;
+      }
+    }
+  }
+
+  // 已登录状态优化
+  .logged-in {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+
+    // 用户信息卡片
+    .user-info-card {
+      padding: 24px 20px;
+      margin-bottom: 20px;
+      border-radius: 16px;
+      gap: 20px;
+
+      .el-avatar {
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        .user-name {
+          font-size: 22px;
+          margin-bottom: 6px;
+        }
+
+        .user-account {
+          font-size: 15px;
+          margin-bottom: 4px;
+        }
+
+        .user-email {
+          font-size: 14px;
+        }
+      }
+    }
+
+    // 设置分组
+    .settings-section {
+      margin-bottom: 16px;
+      border-radius: 12px;
+      overflow: hidden;
+
+      .section-title {
+        padding: 12px 20px 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      // 设置列表项 - ≥56px高度（iOS标准）
+      .setting-item {
+        padding: 18px 20px;
+        min-height: 56px;
+        font-size: 16px;
+        gap: 14px;
+        transition: background 0.2s;
+
+        &:active {
+          background: #f7f8fa;
+        }
+
+        .el-icon {
+          font-size: 22px;
+          color: #3370ff;
+        }
+
+        span {
+          font-weight: 500;
+        }
+
+        .arrow-icon {
+          color: #c9cdd4;
+          font-size: 18px;
+        }
+      }
+    }
+
+    // 退出登录按钮
+    .logout-section {
+      margin-top: 28px;
+      padding: 0 12px;
+
+      .logout-btn {
+        width: 100%;
+        height: 52px;
+        font-size: 17px;
+        font-weight: 600;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #f56565;
+        color: #f56565;
+        transition: all 0.2s;
+
+        &:active {
+          transform: scale(0.98);
+          background: #fff5f5;
+        }
+
+        .el-icon {
+          margin-right: 8px;
+          font-size: 20px;
+        }
+      }
+    }
+  }
+
+  // 关于对话框优化
+  :deep(.el-dialog) {
+    width: 85% !important;
+    max-width: 400px !important;
+    border-radius: 16px;
+    margin: 16px auto !important;
+  }
+
+  :deep(.el-dialog__header) {
+    padding: 20px 20px 12px !important;
+
+    .el-dialog__title {
+      font-size: 18px !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 0 20px 20px !important;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  :deep(.el-dialog__footer) {
+    padding: 12px 20px 20px !important;
+    border-top: none;
+
+    .el-button {
+      width: 100%;
+      height: 50px;
+      font-size: 17px;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+  }
+
+  .about-content {
+    padding: 12px 0;
+
+    .about-header {
+      gap: 12px;
+
+      h2 {
+        font-size: 22px;
+      }
+
+      .about-description {
+        font-size: 15px;
+      }
+    }
+
+    .version-info-list {
+      padding: 0 12px;
+      gap: 10px;
+
+      .version-item {
+        padding: 14px 16px;
+
+        .version-label {
+          font-size: 15px;
+        }
+
+        .version-value {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .copyright-info {
+      padding: 16px 12px 0;
+
+      .copyright-text {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .icp-info {
+        font-size: 12px;
+
+        a {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .profile-view {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .not-logged-in {
+    padding: 12px;
+
+    .login-prompt {
+      padding: 40px 20px;
+      border-radius: 12px;
+
+      .el-icon {
+        margin-bottom: 12px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      p {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+
+      .el-button {
+        height: 48px;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .logged-in {
+    padding: 12px 8px;
+
+    .user-info-card {
+      padding: 20px 16px;
+      margin-bottom: 16px;
+      gap: 16px;
+      border-radius: 12px;
+
+      .el-avatar {
+        :deep(.el-avatar) {
+          width: 64px !important;
+          height: 64px !important;
+        }
+      }
+
+      .user-details {
+        .user-name {
+          font-size: 20px;
+        }
+
+        .user-account {
+          font-size: 14px;
+        }
+
+        .user-email {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .settings-section {
+      margin-bottom: 12px;
+      border-radius: 12px;
+
+      .section-title {
+        padding: 10px 16px 6px;
+        font-size: 12px;
+      }
+
+      .setting-item {
+        padding: 16px 16px;
+        min-height: 52px;
+        font-size: 15px;
+        gap: 12px;
+
+        .el-icon {
+          font-size: 20px;
+        }
+
+        .arrow-icon {
+          font-size: 16px;
+        }
+      }
+    }
+
+    .logout-section {
+      margin-top: 24px;
+      padding: 0 8px;
+
+      .logout-btn {
+        height: 50px;
+        font-size: 16px;
+        border-radius: 12px;
+
+        .el-icon {
+          font-size: 18px;
+        }
+      }
+    }
+  }
+
+  :deep(.el-dialog) {
+    width: 92% !important;
+    margin: 12px auto !important;
+  }
+
+  :deep(.el-dialog__header) {
+    padding: 16px 16px 12px !important;
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 0 16px 16px !important;
+  }
+
+  :deep(.el-dialog__footer) {
+    padding: 12px 16px 16px !important;
+
+    .el-button {
+      height: 48px;
+      font-size: 16px;
+    }
+  }
+
+  .about-content {
+    .about-header {
+      h2 {
+        font-size: 20px;
+      }
+
+      .about-description {
+        font-size: 14px;
+      }
+    }
+
+    .version-info-list {
+      .version-item {
+        padding: 12px 12px;
+
+        .version-label {
+          font-size: 14px;
+        }
+
+        .version-value {
+          font-size: 12px;
+        }
+      }
+    }
+
+    .copyright-info {
+      padding: 12px 12px 0;
+
+      .copyright-text {
+        font-size: 12px;
+      }
+
+      .icp-info {
+        font-size: 11px;
+
+        a {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .profile-view {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    }
+
+    .logged-in {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    }
+
+    :deep(.el-dialog) {
+      max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);
+      margin-top: calc(16px + env(safe-area-inset-top)) !important;
+    }
+  }
+}
 </style>

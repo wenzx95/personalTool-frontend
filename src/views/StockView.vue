@@ -1420,4 +1420,427 @@ onMounted(() => {
     background: #bfbfbf;
   }
 }
+
+/* ============================================================
+   移动端优化（平板和手机）
+   ============================================================ */
+@media (max-width: 768px) {
+  .stock-view {
+    padding: 16px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    min-height: 100vh;
+  }
+
+  /* 页面头部优化 */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .header-content {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .action-btn {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* 统计栏优化 - 改为网格布局 */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stat-item {
+    padding: 16px 12px;
+    border-radius: 12px;
+
+    .stat-label {
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+    }
+  }
+
+  /* 表格区域优化 - 横向滚动 */
+  .table-wrapper {
+    border-radius: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+
+    .data-table {
+      min-width: 1200px; /* 强制表格最小宽度 */
+      font-size: 14px;
+
+      /* 表头固定列优化 */
+      :deep(.el-table__fixed) {
+        height: auto !important;
+      }
+
+      :deep(.el-table__fixed-body-wrapper) {
+        height: auto !important;
+      }
+
+      /* 单元格内边距优化 */
+      :deep(.el-table__header th) {
+        padding: 12px 8px !important;
+        font-size: 13px !important;
+      }
+
+      :deep(.el-table__body td) {
+        padding: 12px 8px !important;
+        font-size: 14px !important;
+      }
+
+      /* 标签优化 */
+      :deep(.el-tag) {
+        font-size: 12px;
+        padding: 4px 8px;
+        height: auto;
+      }
+
+      /* 按钮优化 */
+      :deep(.el-button) {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+    }
+
+    /* 空状态优化 */
+    :deep(.el-empty) {
+      padding: 40px 20px !important;
+      min-width: auto !important;
+
+      .el-empty__description {
+        font-size: 15px !important;
+      }
+    }
+  }
+
+  /* 对话框优化 */
+  .review-dialog {
+    :deep(.el-dialog) {
+      width: 95% !important;
+      max-width: none !important;
+      margin: 16px auto !important;
+      border-radius: 16px;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 20px 20px 16px !important;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 20px !important;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    :deep(.el-dialog__footer) {
+      padding: 16px 20px 20px !important;
+
+      .el-button {
+        flex: 1;
+        height: 48px;
+        font-size: 16px;
+        border-radius: 12px;
+      }
+    }
+
+    /* 表单优化 */
+    :deep(.el-form-item__label) {
+      font-size: 15px !important;
+      height: auto !important;
+      padding-bottom: 8px !important;
+    }
+
+    :deep(.el-input__wrapper),
+    :deep(.el-select__wrapper) {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 12px;
+    }
+
+    :deep(.el-input__inner) {
+      height: 48px !important;
+      line-height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    :deep(.el-textarea__inner) {
+      font-size: 16px !important;
+      line-height: 1.6;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    :deep(.el-date-editor) {
+      height: 48px !important;
+      font-size: 16px !important;
+    }
+
+    /* 进度条优化 */
+    :deep(.el-progress) {
+      .el-progress__text {
+        font-size: 14px !important;
+      }
+    }
+  }
+
+  /* 详情对话框优化 */
+  .detail-dialog {
+    :deep(.el-dialog) {
+      width: 95% !important;
+      max-width: none !important;
+      margin: 16px auto !important;
+      border-radius: 16px;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 20px !important;
+      max-height: 75vh;
+      overflow-y: auto;
+      font-size: 15px;
+    }
+  }
+
+  .detail-wrapper {
+    padding: 0;
+  }
+
+  .detail-section {
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    font-size: 16px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .info-table {
+    :deep(.el-descriptions) {
+      font-size: 14px;
+    }
+
+    :deep(.el-descriptions__label) {
+      font-size: 13px !important;
+      padding: 12px 8px !important;
+    }
+
+    :deep(.el-descriptions__content) {
+      font-size: 13px !important;
+      padding: 12px 8px !important;
+    }
+  }
+
+  .sectors-box {
+    padding: 12px;
+    min-height: 50px;
+
+    .el-tag {
+      font-size: 14px;
+      padding: 6px 12px;
+      margin: 4px;
+    }
+  }
+
+  .stock-table {
+    :deep(.el-table) {
+      font-size: 14px;
+    }
+
+    :deep(.el-table__header th),
+    :deep(.el-table__body td) {
+      padding: 10px 8px !important;
+    }
+  }
+
+  .notes-box {
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.8;
+    min-height: 80px;
+  }
+
+  .empty-tip {
+    padding: 16px;
+    font-size: 14px;
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .stock-view {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
+  .action-btn {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  /* 统计栏优化 - 单列布局 */
+  .stats-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .stat-item {
+    padding: 14px 12px;
+
+    .stat-label {
+      font-size: 12px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+    }
+  }
+
+  /* 表格横向滚动优化 */
+  .table-wrapper {
+    margin: 0 -12px;
+    padding: 0 12px;
+    border-radius: 12px;
+
+    .data-table {
+      min-width: 1000px;
+      font-size: 13px;
+
+      :deep(.el-table__header th) {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+      }
+
+      :deep(.el-table__body td) {
+        padding: 10px 6px !important;
+        font-size: 13px !important;
+      }
+
+      :deep(.el-tag) {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+    }
+  }
+
+  /* 对话框进一步优化 */
+  .review-dialog {
+    :deep(.el-dialog) {
+      width: 100% !important;
+      margin: 0 !important;
+      border-radius: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 16px 16px 12px !important;
+      flex-shrink: 0;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 16px !important;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    :deep(.el-dialog__footer) {
+      padding: 12px 16px 16px !important;
+      flex-shrink: 0;
+    }
+  }
+
+  .detail-dialog {
+    :deep(.el-dialog) {
+      width: 100% !important;
+      margin: 0 !important;
+      border-radius: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 16px !important;
+      flex: 1;
+      overflow-y: auto;
+    }
+  }
+
+  .section-header {
+    font-size: 15px;
+  }
+
+  .info-table {
+    :deep(.el-descriptions__label),
+    :deep(.el-descriptions__content) {
+      font-size: 12px !important;
+      padding: 10px 6px !important;
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .stock-view {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    }
+
+    .review-dialog :deep(.el-dialog),
+    .detail-dialog :deep(.el-dialog) {
+      max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      margin-top: env(safe-area-inset-top) !important;
+    }
+  }
+}
 </style>

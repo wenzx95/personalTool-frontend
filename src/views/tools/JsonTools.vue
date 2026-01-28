@@ -94,7 +94,9 @@ defineExpose({
 // ========== 响应式 ==========
 @media (max-width: 768px) {
   .tools-content {
-    padding: 12px;
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   // 移动端按钮优化 - 使用:deep()穿透scoped
@@ -126,6 +128,38 @@ defineExpose({
       height: 44px !important;
       min-height: 44px !important;
       font-size: 16px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .tools-content {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  :deep(.el-button) {
+    height: 44px !important;
+    font-size: 15px !important;
+  }
+
+  :deep(.el-textarea__inner) {
+    font-size: 15px !important;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .tools-content {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     }
   }
 }

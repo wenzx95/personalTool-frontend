@@ -193,4 +193,189 @@ const handleSkip = () => {
   padding-top: var(--spacing-lg);
   border-top: 1px solid var(--color-border-light);
 }
+
+/* ============================================================
+   移动端优化（平板和手机）
+   ============================================================ */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 40px 24px;
+    padding-top: calc(40px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    justify-content: flex-start;
+  }
+
+  .login-card {
+    max-width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .login-card :deep(.el-card__body) {
+    padding: 32px 24px;
+  }
+
+  .login-header {
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+  }
+
+  .login-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .login-subtitle {
+    font-size: 16px;
+  }
+
+  .login-form {
+    margin-top: 24px;
+  }
+
+  .login-form .el-form-item {
+    margin-bottom: 20px;
+  }
+
+  /* 输入框优化 - ≥48px高度，≥16px字体 */
+  .login-form :deep(.el-input__wrapper) {
+    height: 48px !important;
+    font-size: 16px !important;
+    border-radius: 12px;
+    padding: 0 16px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1) inset;
+    transition: all 0.2s;
+  }
+
+  .login-form :deep(.el-input__wrapper):hover {
+    box-shadow: 0 0 0 1px rgba(51, 112, 255, 0.3) inset;
+  }
+
+  .login-form :deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px #3370ff inset;
+  }
+
+  .login-form :deep(.el-input__inner) {
+    height: 48px !important;
+    line-height: 48px !important;
+    font-size: 16px !important;
+    color: #1d2129;
+  }
+
+  .login-form :deep(.el-input__prefix) {
+    font-size: 18px;
+    color: #86909c;
+  }
+
+  .login-form :deep(.el-form-item__error) {
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  /* 登录按钮优化 - 50px高度 */
+  .login-button {
+    width: 100%;
+    height: 50px !important;
+    font-size: 17px !important;
+    font-weight: 600;
+    border-radius: 12px;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+
+  .login-button:active {
+    transform: scale(0.98);
+  }
+
+  /* 跳过按钮优化 */
+  .skip-button {
+    width: 100%;
+    height: 48px !important;
+    font-size: 16px !important;
+    border-radius: 12px;
+    margin-top: 12px;
+    color: #4e5969;
+    background: #f7f8fa;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.2s;
+  }
+
+  .skip-button:active {
+    transform: scale(0.98);
+    background: #e5e6eb;
+  }
+
+  .login-footer {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  .login-footer :deep(.el-text) {
+    font-size: 14px;
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .login-container {
+    padding: 32px 20px;
+    padding-top: calc(32px + env(safe-area-inset-top, 0px));
+  }
+
+  .login-card :deep(.el-card__body) {
+    padding: 28px 20px;
+  }
+
+  .login-header {
+    margin-bottom: 28px;
+  }
+
+  .logo-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+
+  .login-title {
+    font-size: 24px;
+  }
+
+  .login-subtitle {
+    font-size: 15px;
+  }
+
+  .login-form :deep(.el-input__wrapper) {
+    height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  .login-button {
+    height: 50px !important;
+    font-size: 16px !important;
+  }
+
+  .skip-button {
+    height: 48px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .login-container {
+      padding-top: calc(48px + env(safe-area-inset-top, 0px));
+    }
+  }
+}
 </style>

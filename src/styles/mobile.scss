@@ -1,4 +1,23 @@
-// 移动端和PWA全局样式
+// ============================================================
+// PersonalTool 移动端全局样式
+// ============================================================
+// 版本：v2.0.0
+// 更新日期：2026-01-28
+// 用途：提供全局移动端优化样式
+// ============================================================
+//
+// **样式库架构**：
+// 1. mobile.scss - 全局移动端优化（本文件）
+// 2. mobile-unified.scss - 统一组件样式库（通用组件类）
+// 3. element-mobile.scss - Element Plus组件覆盖
+//
+// **使用建议**：
+// - 优先使用 mobile-unified.scss 中的通用组件类（.mobile-card, .mobile-btn等）
+// - 本文件主要提供全局基础样式和PWA适配
+// - Element Plus组件覆盖见 element-mobile.scss
+//
+// ============================================================
+
 // 安全区域适配（刘海屏）
 :root {
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -57,9 +76,14 @@ html.standalone-mode {
   }
 
   // 主内容区域 - 增加左右边距（原生App标准）
-  .main-container,
-  > div,
-  > section {
+  .main-container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  // 页面容器直接子元素优化
+  .main-container > div,
+  .main-container > section {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }

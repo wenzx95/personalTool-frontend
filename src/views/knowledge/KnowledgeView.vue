@@ -882,43 +882,657 @@ onMounted(() => {
   }
 }
 
-/* 响应式 */
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
 @media (max-width: 1024px) {
   .content-container {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     padding: 0 16px 24px;
   }
 
   .chapter-sidebar {
+    width: 100%;
     position: static;
     max-height: 400px;
   }
 }
 
 @media (max-width: 768px) {
+  /* 页面容器优化 */
+  .knowledge-view-page {
+    background: #f7f8fa;
+  }
+
+  /* 知识库头部优化 */
+  .kb-header {
+    margin-bottom: 16px;
+  }
+
+  .kb-cover,
+  .kb-cover-placeholder {
+    height: 180px;
+  }
+
+  .kb-cover-placeholder {
+    .placeholder-icon {
+      font-size: 64px;
+    }
+  }
+
   .kb-info {
-    padding: 16px;
+    padding: 12px;
     margin-top: -40px;
   }
 
   .info-container {
     padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* 知识库元信息优化 */
+  .kb-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
   }
 
   .kb-title {
     font-size: 22px;
+    line-height: 1.3;
   }
 
+  /* 知识库描述优化 */
+  .kb-description {
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  /* 知识库统计优化 */
   .kb-stats {
-    gap: 16px;
+    gap: 12px 16px;
+    margin-bottom: 12px;
   }
 
+  .stat-item {
+    font-size: 13px;
+
+    .el-icon {
+      font-size: 16px;
+    }
+  }
+
+  /* 知识库标签优化 */
+  .kb-tags {
+    gap: 6px;
+
+    .tag-item {
+      font-size: 12px;
+      padding: 4px 10px;
+      min-height: 28px;
+      line-height: 20px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.2s;
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+
+  /* 内容区域优化 */
+  .content-container {
+    padding: 0 12px 20px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 章节侧边栏优化 */
+  .chapter-sidebar {
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    height: auto;
+    max-height: 350px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 12px;
+
+    .header-title-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+
+      h3 {
+        font-size: 16px;
+      }
+
+      .el-button {
+        width: 100%;
+        height: 44px;
+        font-size: 15px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+    }
+
+    /* 搜索输入框优化 */
+    .search-input {
+      margin-bottom: 12px;
+
+      :deep(.el-input__wrapper) {
+        height: 44px !important;
+        font-size: 16px !important;
+        border-radius: 10px;
+      }
+    }
+
+    .drag-tip {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+
+      .el-icon {
+        font-size: 14px;
+      }
+    }
+  }
+
+  /* 章节树优化 */
+  .chapter-tree {
+    :deep(.el-tree-node__content) {
+      height: 44px !important;
+      border-radius: 8px;
+      font-size: 15px;
+      padding: 0 12px;
+
+      &:active {
+        background: #e6f7ff;
+      }
+    }
+
+    :deep(.is-current > .el-tree-node__content) {
+      background: #e6f7ff;
+      color: #1890ff;
+      font-weight: 500;
+    }
+  }
+
+  .tree-node {
+    .node-title {
+      font-size: 15px;
+    }
+
+    .ref-icon {
+      font-size: 16px;
+    }
+
+    .word-count {
+      font-size: 12px;
+    }
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 40px 16px;
+
+    .el-empty__description {
+      font-size: 14px !important;
+    }
+
+    .el-empty__image {
+      width: 80px !important;
+      height: 80px !important;
+    }
+  }
+
+  /* 右侧内容区优化 */
   .content-main {
-    padding: 20px;
+    border-radius: 12px;
+    padding: 20px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    min-height: auto;
   }
 
-  .content-title {
-    font-size: 22px;
+  /* 面包屑导航优化 */
+  .breadcrumb-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+
+    :deep(.el-breadcrumb) {
+      width: 100%;
+      font-size: 14px;
+
+      .el-breadcrumb__item {
+        .el-breadcrumb__inner {
+          font-size: 14px;
+        }
+      }
+    }
+
+    .edit-btn {
+      width: 100%;
+      height: 44px;
+      font-size: 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      .el-icon {
+        font-size: 16px;
+      }
+    }
+  }
+
+  /* 章节内容优化 */
+  .chapter-content {
+    .content-title {
+      font-size: 22px;
+      margin: 0 0 20px 0;
+      padding-bottom: 12px;
+    }
+  }
+
+  /* 引用提示优化 */
+  .reference-tip {
+    padding: 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  /* Markdown预览优化 */
+  .markdown-preview {
+    font-size: 16px;
+    line-height: 1.8;
+
+    :deep(h1) {
+      font-size: 24px;
+      margin-top: 28px;
+      padding-bottom: 12px;
+    }
+
+    :deep(h2) {
+      font-size: 20px;
+      margin-top: 24px;
+      padding-bottom: 10px;
+    }
+
+    :deep(h3) {
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    :deep(p) {
+      font-size: 16px;
+      margin: 0.8em 0;
+      line-height: 1.8;
+    }
+
+    :deep(code) {
+      font-size: 14px;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    :deep(pre) {
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      font-size: 13px;
+      line-height: 1.6;
+
+      code {
+        font-size: 13px;
+      }
+    }
+
+    :deep(blockquote) {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    :deep(ul),
+    :deep(ol) {
+      padding-left: 1.5em;
+      margin: 0.8em 0;
+    }
+
+    :deep(img) {
+      border-radius: 8px;
+      margin: 1em 0;
+    }
+
+    /* 表格横向滚动优化 */
+    :deep(table) {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+
+      th, td {
+        padding: 10px 8px;
+        font-size: 14px;
+        min-width: 80px;
+      }
+    }
+
+    /* 链接优化 */
+    :deep(a) {
+      color: #3370ff;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-bottom-color 0.2s;
+
+      &:active {
+        border-bottom-color: #3370ff;
+      }
+    }
+  }
+
+  /* 空状态优化 */
+  .empty-state {
+    padding: 60px 20px;
+
+    .empty-icon {
+      font-size: 56px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 15px;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .content-container {
+    padding: 0 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  }
+
+  /* 知识库头部 */
+  .kb-cover,
+  .kb-cover-placeholder {
+    height: 150px;
+  }
+
+  .kb-cover-placeholder {
+    .placeholder-icon {
+      font-size: 56px;
+    }
+  }
+
+  .kb-info {
+    padding: 10px;
+    margin-top: -30px;
+  }
+
+  .info-container {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .kb-title {
+    font-size: 20px;
+  }
+
+  .kb-description {
+    font-size: 14px;
+  }
+
+  /* 知识库统计 */
+  .kb-stats {
+    gap: 10px 12px;
+  }
+
+  .stat-item {
+    font-size: 12px;
+
+    .el-icon {
+      font-size: 14px;
+    }
+  }
+
+  /* 知识库标签 */
+  .kb-tags {
+    .tag-item {
+      font-size: 11px;
+      padding: 4px 8px;
+      min-height: 26px;
+      border-radius: 4px;
+    }
+  }
+
+  /* 章节侧边栏 */
+  .chapter-sidebar {
+    border-radius: 10px;
+    padding: 14px;
+    max-height: 320px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 10px;
+
+    .header-title-row {
+      gap: 10px;
+      margin-bottom: 10px;
+
+      h3 {
+        font-size: 15px;
+      }
+
+      .el-button {
+        height: 44px;
+        font-size: 14px;
+      }
+    }
+
+    .search-input {
+      margin-bottom: 10px;
+
+      :deep(.el-input__wrapper) {
+        height: 44px !important;
+        font-size: 16px !important;
+        border-radius: 8px;
+      }
+    }
+
+    .drag-tip {
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
+  }
+
+  /* 章节树 */
+  .chapter-tree {
+    :deep(.el-tree-node__content) {
+      height: 44px !important;
+      font-size: 14px;
+      padding: 0 10px;
+    }
+  }
+
+  .tree-node {
+    .node-title {
+      font-size: 14px;
+    }
+
+    .ref-icon {
+      font-size: 14px;
+    }
+
+    .word-count {
+      font-size: 11px;
+    }
+  }
+
+  /* 内容区域 */
+  .content-main {
+    border-radius: 10px;
+    padding: 16px 12px;
+  }
+
+  /* 面包屑导航 */
+  .breadcrumb-bar {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    gap: 10px;
+
+    :deep(.el-breadcrumb) {
+      font-size: 13px;
+
+      .el-breadcrumb__item {
+        .el-breadcrumb__inner {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .edit-btn {
+      height: 44px;
+      font-size: 14px;
+    }
+  }
+
+  /* 章节内容 */
+  .chapter-content {
+    .content-title {
+      font-size: 20px;
+      margin: 0 0 16px 0;
+      padding-bottom: 10px;
+    }
+  }
+
+  .reference-tip {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+
+  /* Markdown预览 */
+  .markdown-preview {
+    font-size: 16px;
+
+    :deep(h1) {
+      font-size: 22px;
+      margin-top: 24px;
+    }
+
+    :deep(h2) {
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    :deep(h3) {
+      font-size: 16px;
+      margin-top: 18px;
+    }
+
+    :deep(p) {
+      font-size: 16px;
+    }
+
+    :deep(code) {
+      font-size: 13px;
+    }
+
+    :deep(pre) {
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+
+      code {
+        font-size: 12px;
+      }
+    }
+
+    :deep(blockquote) {
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    :deep(ul),
+    :deep(ol) {
+      padding-left: 1.2em;
+    }
+
+    :deep(table) {
+      th, td {
+        padding: 8px 6px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  /* 空状态 */
+  .empty-state {
+    padding: 48px 16px;
+
+    .empty-icon {
+      font-size: 48px;
+    }
+
+    p {
+      font-size: 14px;
+    }
+  }
+
+  /* 章节树空状态 */
+  :deep(.el-empty) {
+    padding: 32px 12px;
+
+    .el-empty__description {
+      font-size: 13px !important;
+    }
+
+    .el-empty__image {
+      width: 70px !important;
+      height: 70px !important;
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .knowledge-view-page {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .content-container {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
   }
 }
 </style>

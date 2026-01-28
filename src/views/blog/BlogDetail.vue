@@ -573,42 +573,416 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .blog-detail-page {
-    padding: 20px 0;
+    padding: 0;
   }
 
   .detail-layout {
     padding: 20px 16px;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   }
 
   .main-content {
     padding: 24px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  /* 文章头部优化 */
+  .article-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+  }
+
+  .header-tags {
+    margin-bottom: 12px;
+
+    :deep(.el-tag) {
+      font-size: 12px;
+      padding: 4px 10px;
+      height: auto;
+      border-radius: 6px;
+    }
   }
 
   .article-title {
-    font-size: 28px;
+    font-size: 26px;
+    line-height: 1.3;
+    margin-bottom: 16px;
   }
 
   .article-meta {
     flex-direction: column;
     align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .author-section {
+    gap: 10px;
+  }
+
+  .author-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .author-info {
+    gap: 2px;
+  }
+
+  .author-name {
+    font-size: 14px;
+  }
+
+  .publish-time {
+    font-size: 12px;
+  }
+
+  .meta-stats {
+    gap: 16px;
+    width: 100%;
+
+    .stat-item {
+      font-size: 13px;
+
+      .el-icon {
+        font-size: 15px;
+      }
+    }
+  }
+
+  .article-tags {
+    gap: 8px;
+
+    .tag-item {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+  }
+
+  /* 封面图优化 */
+  .article-cover {
+    margin-bottom: 24px;
+    border-radius: 12px;
+  }
+
+  /* 摘要优化 */
+  .article-summary {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border-left-width: 4px;
+
+    .summary-content {
+      font-size: 14px;
+      line-height: 1.7;
+      gap: 8px;
+    }
+
+    .summary-icon {
+      font-size: 16px;
+      margin-top: 1px;
+    }
+  }
+
+  /* Markdown内容优化 */
+  .article-content {
+    :deep(.md-preview) {
+      font-size: 16px;
+      line-height: 1.8;
+
+      /* 标题移动端优化 */
+      .md-preview-h1 {
+        font-size: 24px;
+        margin-top: 28px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+      }
+
+      .md-preview-h2 {
+        font-size: 20px;
+        margin-top: 24px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+      }
+
+      .md-preview-h3 {
+        font-size: 18px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+      }
+
+      .md-preview-h4 {
+        font-size: 16px;
+        margin-top: 18px;
+        margin-bottom: 10px;
+      }
+
+      /* 段落 */
+      p {
+        margin: 0 0 16px 0;
+      }
+
+      /* 列表 */
+      ul,
+      ol {
+        margin: 14px 0;
+        padding-left: 20px;
+      }
+
+      li {
+        margin: 6px 0;
+      }
+
+      /* 引用块 */
+      blockquote {
+        margin: 14px 0;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 15px;
+      }
+
+      /* 代码块 */
+      pre {
+        margin: 14px 0;
+        padding: 12px;
+        font-size: 13px;
+        border-radius: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      code {
+        font-size: 13px;
+      }
+
+      /* 行内代码 */
+      :not(pre) > code {
+        padding: 2px 6px;
+        font-size: 0.9em;
+      }
+
+      /* 表格横向滚动 */
+      table {
+        margin: 14px 0;
+        font-size: 14px;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+
+        th,
+        td {
+          padding: 10px 8px;
+          min-width: 80px;
+        }
+      }
+
+      /* 图片优化 */
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 14px 0;
+      }
+
+      /* 分隔线 */
+      hr {
+        margin: 28px 0;
+      }
+    }
+  }
+
+  /* 浮动按钮优化 */
+  .show-toc-btn {
+    left: 16px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    width: 48px;
+    height: 48px;
+
+    :deep(.el-icon) {
+      font-size: 20px;
+    }
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 80px 20px;
+
+    .el-empty__description {
+      font-size: 15px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .detail-layout {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+
+  .main-content {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .article-header {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+
+  .header-tags {
+    margin-bottom: 10px;
+  }
+
+  .article-title {
+    font-size: 22px;
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  .article-meta {
     gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .author-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .author-name {
+    font-size: 13px;
+  }
+
+  .publish-time {
+    font-size: 11px;
+  }
+
+  .meta-stats .stat-item {
+    font-size: 12px;
+  }
+
+  .article-cover {
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+
+  .article-summary {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+
+    .summary-content {
+      font-size: 13px;
+    }
+
+    .summary-icon {
+      font-size: 15px;
+    }
   }
 
   .article-content {
     :deep(.md-preview) {
       font-size: 15px;
+      line-height: 1.75;
 
       .md-preview-h1 {
-        font-size: 24px;
+        font-size: 22px;
+        margin-top: 24px;
       }
 
       .md-preview-h2 {
-        font-size: 20px;
+        font-size: 18px;
+        margin-top: 20px;
       }
 
       .md-preview-h3 {
-        font-size: 18px;
+        font-size: 16px;
+        margin-top: 18px;
       }
+
+      p {
+        margin: 0 0 14px 0;
+      }
+
+      ul,
+      ol {
+        margin: 12px 0;
+        padding-left: 18px;
+      }
+
+      blockquote {
+        margin: 12px 0;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+
+      pre {
+        margin: 12px 0;
+        padding: 10px;
+        font-size: 12px;
+      }
+
+      table {
+        margin: 12px 0;
+        font-size: 13px;
+
+        th,
+        td {
+          padding: 8px 6px;
+        }
+      }
+
+      img {
+        margin: 12px 0;
+      }
+
+      hr {
+        margin: 24px 0;
+      }
+    }
+  }
+
+  .show-toc-btn {
+    left: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: 44px;
+    height: 44px;
+
+    :deep(.el-icon) {
+      font-size: 18px;
+    }
+  }
+
+  :deep(.el-empty) {
+    padding: 60px 16px;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .detail-layout {
+      padding-top: calc(24px + env(safe-area-inset-top, 0px));
+    }
+
+    .show-toc-btn {
+      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  @media (max-width: 430px) {
+    .show-toc-btn {
+      bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
   }
 }

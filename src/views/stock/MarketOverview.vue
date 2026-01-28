@@ -442,27 +442,360 @@ onMounted(() => {
 @media (max-width: 768px) {
   /* 页面容器优化 */
   .market-overview {
-    padding: 12px;
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
-  .bento-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .bento-card-large {
-    grid-column: span 1;
-  }
-
+  /* 页面头部优化 */
   .page-header {
-    flex-direction: column;
+    margin-bottom: 20px;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
   }
 
   .header-actions {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .el-button {
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      .el-icon {
+        font-size: 18px;
+      }
+    }
   }
 
-  .market-stats {
+  /* 最新日期标签 */
+  .latest-date-badge {
+    margin-bottom: 16px;
+    text-align: center;
+
+    :deep(.el-tag) {
+      height: 32px;
+      font-size: 14px;
+      padding: 0 16px;
+      border-radius: 8px;
+    }
+  }
+
+  /* Bento网格优化 */
+  .bento-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .bento-card-large {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
+  /* 卡片通用优化 */
+  .bento-card {
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .card-header {
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* 市场概览卡片 */
+  .market-overview-card {
+    .card-header {
+      :deep(.el-tag) {
+        font-size: 12px;
+        padding: 4px 10px;
+        height: auto;
+      }
+    }
+
+    .market-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 12px 8px;
+      background: #f7f8fa;
+      border-radius: 8px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .stat-divider {
+      margin: 0 2px;
+    }
+  }
+
+  /* 连板统计卡片 */
+  .continuous-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .continuous-item {
+    padding: 12px 8px;
+    border-radius: 8px;
+  }
+
+  .continuous-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .continuous-value {
+    font-size: 18px;
+  }
+
+  /* 股票列表 */
+  .stock-list {
+    gap: 10px;
+  }
+
+  .stock-item {
+    padding: 12px;
+    border-radius: 8px;
+    min-height: 48px;
+
+    .stock-name {
+      font-size: 14px;
+    }
+
+    :deep(.el-tag) {
+      font-size: 12px;
+      padding: 4px 8px;
+      height: auto;
+    }
+  }
+
+  /* 热门板块 */
+  .sectors-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .sector-tag {
+    :deep(.el-tag) {
+      font-size: 13px;
+      padding: 8px 4px;
+      height: auto;
+      border-radius: 6px;
+      justify-content: center;
+    }
+  }
+
+  /* 快捷操作 */
+  .quick-actions {
+    gap: 12px;
+  }
+
+  .action-btn {
+    height: 48px;
+    font-size: 16px;
+    border-radius: 10px;
+    padding: 0 16px;
+
+    .el-icon {
+      font-size: 18px;
+      margin-right: 6px;
+    }
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 60px 20px;
+
+    .el-empty__description {
+      font-size: 15px !important;
+    }
+
+    .el-button {
+      height: 48px;
+      font-size: 16px;
+      border-radius: 12px;
+      padding: 0 24px;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .market-overview {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .header-actions .el-button {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .latest-date-badge {
+    margin-bottom: 12px;
+
+    :deep(.el-tag) {
+      height: 30px;
+      font-size: 13px;
+      padding: 0 14px;
+    }
+  }
+
+  .bento-grid {
+    gap: 10px;
+  }
+
+  .bento-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  /* 市场统计优化 */
+  .market-overview-card {
+    .market-stats {
+      gap: 10px;
+    }
+
+    .stat-item {
+      padding: 10px 6px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+    }
+  }
+
+  /* 连板统计 */
+  .continuous-stats {
+    gap: 8px;
+  }
+
+  .continuous-item {
+    padding: 10px 6px;
+  }
+
+  .continuous-label {
+    font-size: 11px;
+  }
+
+  .continuous-value {
+    font-size: 16px;
+  }
+
+  /* 股票列表 */
+  .stock-item {
+    padding: 10px;
+    min-height: 44px;
+
+    .stock-name {
+      font-size: 13px;
+    }
+  }
+
+  /* 热门板块 */
+  .sectors-grid {
+    gap: 6px;
+
+    .sector-tag :deep(.el-tag) {
+      font-size: 12px;
+      padding: 6px 4px;
+    }
+  }
+
+  .quick-actions {
+    gap: 10px;
+  }
+
+  .action-btn {
+    height: 48px;
+    font-size: 15px;
+
+    .el-icon {
+      font-size: 16px;
+    }
+  }
+
+  :deep(.el-empty) {
+    padding: 48px 16px;
+
+    .el-button {
+      height: 48px;
+      font-size: 15px;
+      padding: 0 20px;
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .market-overview {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    }
   }
 }
 </style>

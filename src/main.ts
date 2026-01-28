@@ -8,6 +8,7 @@ import router from './router'
 import './styles/theme.css'
 import './style.css'
 import './styles/mobile.scss'
+import './styles/mobile-unified.scss'
 import './styles/element-mobile.scss'
 import './styles/desktop.scss'
 

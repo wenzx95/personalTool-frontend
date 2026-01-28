@@ -1492,25 +1492,282 @@ onMounted(() => {
   }
 }
 
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
 @media (max-width: 768px) {
+  /* 页面容器优化 */
+  .stock-dashboard {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 页面头部优化 */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    .header-content {
+      .page-title {
+        font-size: 24px;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+      }
+    }
+
+    .header-actions {
+      width: 100%;
+      display: flex;
+      gap: 12px;
+
+      .el-button {
+        flex: 1;
+        height: 48px;
+        font-size: 16px;
+        border-radius: 12px;
+      }
+    }
+  }
+
+  /* Bento网格优化 */
   .bento-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .bento-card-large {
     grid-column: span 1;
   }
 
-  .page-header {
-    flex-direction: column;
+  /* Bento卡片优化 */
+  .bento-card {
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+      margin-bottom: 12px;
+
+      .card-title {
+        font-size: 16px;
+      }
+    }
   }
 
-  .header-actions {
-    width: 100%;
+  /* 市场统计优化 */
+  .market-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+
+    .stat-item {
+      padding: 12px;
+      border-radius: 8px;
+
+      .stat-label {
+        font-size: 12px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+      }
+
+      .stat-change {
+        font-size: 12px;
+      }
+    }
+  }
+
+  /* 流入板块优化 */
+  .sectors-box {
+    padding: 12px;
+    border-radius: 8px;
+
+    .el-tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      min-height: 28px;
+      line-height: 20px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+
+  /* 复盘笔记优化 */
+  .notes-box {
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* ECharts图表优化 */
+  .chart {
+    :deep(.echarts-tooltip) {
+      font-size: 13px !important;
+    }
+
+    :deep(.echarts-legend) {
+      font-size: 12px !important;
+    }
+
+    :deep(.echarts-xaxis .echarts-axis-label) {
+      font-size: 11px !important;
+    }
+
+    :deep(.echarts-yaxis .echarts-axis-label) {
+      font-size: 11px !important;
+    }
+  }
+
+  /* Loading状态优化 */
+  :deep(.el-loading-mask) {
+    border-radius: 12px;
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 40px 16px;
+
+    .el-empty__description {
+      font-size: 14px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .stock-dashboard {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 12px;
+    gap: 10px;
+
+    .header-content {
+      .page-title {
+        font-size: 22px;
+      }
+
+      .page-subtitle {
+        font-size: 13px;
+      }
+    }
+
+    .header-actions {
+      gap: 10px;
+
+      .el-button {
+        height: 48px;
+        font-size: 15px;
+      }
+    }
+  }
+
+  .bento-grid {
+    gap: 10px;
+  }
+
+  .bento-card {
+    padding: 14px;
+    border-radius: 10px;
+
+    .card-header {
+      margin-bottom: 10px;
+
+      .card-title {
+        font-size: 15px;
+      }
+    }
   }
 
   .market-stats {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+
+    .stat-item {
+      padding: 10px;
+      border-radius: 6px;
+
+      .stat-label {
+        font-size: 11px;
+      }
+
+      .stat-value {
+        font-size: 16px;
+      }
+
+      .stat-change {
+        font-size: 11px;
+      }
+    }
+  }
+
+  .sectors-box {
+    padding: 10px;
+
+    .el-tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      min-height: 26px;
+      border-radius: 4px;
+    }
+  }
+
+  .notes-box {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .chart {
+    :deep(.echarts-tooltip) {
+      font-size: 12px !important;
+    }
+
+    :deep(.echarts-legend) {
+      font-size: 11px !important;
+    }
+
+    :deep(.echarts-xaxis .echarts-axis-label) {
+      font-size: 10px !important;
+    }
+
+    :deep(.echarts-yaxis .echarts-axis-label) {
+      font-size: 10px !important;
+    }
+  }
+
+  :deep(.el-empty) {
+    padding: 32px 12px;
+
+    .el-empty__description {
+      font-size: 13px !important;
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .stock-dashboard {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
   }
 }
 </style>

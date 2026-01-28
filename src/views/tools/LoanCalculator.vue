@@ -598,38 +598,396 @@ calculate()
   }
 }
 
-@media (max-width: 640px) {
-  .summary-cards {
-    grid-template-columns: 1fr;
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 页面容器优化 */
+  .loan-calculator {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* 移动端按钮优化 */
+  /* 页面头部优化 */
   .page-header {
-    .el-button {
-      min-height: 48px;
-      padding: 0 20px;
-      font-size: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .header-content {
+      .page-title {
+        font-size: 24px;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+      }
+    }
+
+    .header-actions {
+      width: 100%;
+      display: flex;
+      gap: 12px;
+
+      .el-button {
+        flex: 1;
+        height: 48px;
+        font-size: 16px;
+        border-radius: 12px;
+      }
     }
   }
 
-  /* 表单按钮 */
-  .el-form-item {
+  /* 计算器布局优化 */
+  .calculator-layout {
+    gap: 16px;
+  }
+
+  /* 输入区域优化 */
+  .input-section {
+    border-radius: 12px;
+    padding: 16px;
+
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+  }
+
+  /* 表单优化 */
+  .el-form {
+    .el-form-item {
+      margin-bottom: 16px;
+
+      .el-form-item__label {
+        font-size: 14px;
+        height: auto;
+        line-height: normal;
+        margin-bottom: 8px;
+      }
+    }
+
+    /* 输入框优化 */
+    :deep(.el-input__wrapper) {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
+    }
+
+    /* 选择器优化 */
+    :deep(.el-select__wrapper) {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
+    }
+
+    /* 单选按钮组优化 */
+    :deep(.el-radio-group) {
+      display: flex;
+      width: 100%;
+
+      .el-radio-button {
+        flex: 1;
+
+        .el-radio-button__inner {
+          width: 100%;
+          height: 44px;
+          line-height: 44px;
+          font-size: 15px;
+          border-radius: 8px;
+        }
+      }
+    }
+
+    /* 表单按钮优化 */
     .el-button {
       width: 100%;
-      min-height: 48px;
-      font-size: 15px;
-      margin-bottom: 8px;
+      height: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      margin-top: 8px;
     }
   }
 
-  /* 卡片区域 */
-  .summary-card,
+  /* 汇总卡片优化 */
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    padding: 16px;
+    border-radius: 12px;
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-label {
+      font-size: 13px;
+    }
+
+    .card-value {
+      font-size: 20px;
+    }
+  }
+
+  /* 对比卡片优化 */
+  .comparison-card {
+    border-radius: 12px;
+
+    :deep(.el-card__header) {
+      padding: 16px;
+
+      .card-title {
+        font-size: 16px;
+      }
+    }
+
+    :deep(.el-card__body) {
+      padding: 16px;
+    }
+
+    .comparison-table {
+      font-size: 14px;
+
+      .comparison-row {
+        padding: 10px 0;
+      }
+
+      .comparison-label {
+        font-size: 14px;
+      }
+
+      .comparison-value {
+        font-size: 14px;
+      }
+    }
+  }
+
+  /* 图表卡片优化 */
+  .chart-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+
+    :deep(.el-card__header) {
+      padding: 16px;
+
+      .card-title {
+        font-size: 16px;
+      }
+    }
+
+    :deep(.el-card__body) {
+      padding: 16px;
+    }
+
+    .chart {
+      height: 260px;
+    }
+  }
+
+  /* Tips卡片优化 */
+  .tips-card {
+    border-radius: 12px;
+
+    :deep(.el-card__header) {
+      padding: 16px;
+      font-size: 16px;
+    }
+
+    :deep(.el-card__body) {
+      padding: 16px;
+    }
+
+    .tips-list {
+      gap: 10px;
+    }
+
+    .tip-item {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  }
+
+  /* ECharts图表优化 */
+  .chart {
+    :deep(.echarts-tooltip) {
+      font-size: 13px !important;
+    }
+
+    :deep(.echarts-legend) {
+      font-size: 12px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .loan-calculator {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+    gap: 10px;
+
+    .header-content {
+      .page-title {
+        font-size: 22px;
+      }
+
+      .page-subtitle {
+        font-size: 13px;
+      }
+    }
+
+    .header-actions {
+      gap: 10px;
+
+      .el-button {
+        height: 48px;
+        font-size: 15px;
+      }
+    }
+  }
+
+  .calculator-layout {
+    gap: 12px;
+  }
+
+  .input-section {
+    border-radius: 10px;
+    padding: 14px;
+
+    .section-title {
+      font-size: 17px;
+      margin-bottom: 14px;
+    }
+  }
+
+  .el-form {
+    .el-form-item {
+      margin-bottom: 14px;
+
+      .el-form-item__label {
+        font-size: 13px;
+      }
+    }
+
+    :deep(.el-input__wrapper),
+    :deep(.el-select__wrapper) {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 8px;
+    }
+
+    :deep(.el-radio-button) {
+      .el-radio-button__inner {
+        height: 42px;
+        line-height: 42px;
+        font-size: 14px;
+        border-radius: 6px;
+      }
+    }
+
+    .el-button {
+      height: 50px;
+      font-size: 15px;
+    }
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 14px;
+    border-radius: 10px;
+
+    .card-label {
+      font-size: 12px;
+    }
+
+    .card-value {
+      font-size: 18px;
+    }
+  }
+
   .comparison-card,
   .chart-card,
   .tips-card {
-    .el-button {
-      min-height: 48px;
-      font-size: 15px;
+    border-radius: 10px;
+
+    :deep(.el-card__header) {
+      padding: 14px;
+
+      .card-title {
+        font-size: 15px;
+      }
+    }
+
+    :deep(.el-card__body) {
+      padding: 14px;
+    }
+  }
+
+  .comparison-table {
+    font-size: 13px;
+
+    .comparison-row {
+      padding: 8px 0;
+    }
+
+    .comparison-label,
+    .comparison-value {
+      font-size: 13px;
+    }
+  }
+
+  .chart {
+    height: 220px;
+
+    :deep(.echarts-tooltip) {
+      font-size: 12px !important;
+    }
+
+    :deep(.echarts-legend) {
+      font-size: 11px !important;
+    }
+  }
+
+  .tips-list {
+    gap: 8px;
+  }
+
+  .tip-item {
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .loan-calculator {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     }
   }
 }

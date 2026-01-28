@@ -961,16 +961,59 @@ watch([searchQuery, marketStrengthFilter, dateRange], () => {
   }
 }
 
-/* 移动端响应式优化 */
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
 @media (max-width: 768px) {
   /* 页面容器优化 */
   .review-records {
-    padding: 12px;
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* 移动端筛选区域优化 */
+  /* 页面头部优化 */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: flex;
+
+    .el-button {
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      .el-icon {
+        font-size: 18px;
+      }
+    }
+  }
+
+  /* 筛选区域优化 */
   .filters-section {
-    padding: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
 
     /* 强制el-row变成垂直布局 */
     :deep(.el-row) {
@@ -987,58 +1030,580 @@ watch([searchQuery, marketStrengthFilter, dateRange], () => {
       margin-bottom: 12px;
     }
 
-    /* 搜索框全宽 */
+    /* 搜索框优化 */
     :deep(.el-input) {
       width: 100% !important;
     }
 
     :deep(.el-input__wrapper) {
-      width: 100% !important;
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
     }
 
-    /* 选择器全宽 */
+    /* 选择器优化 */
     :deep(.el-select) {
       width: 100% !important;
     }
 
     :deep(.el-select__wrapper) {
-      width: 100% !important;
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
     }
 
-    /* 日期选择器全宽 */
+    /* 日期选择器优化 */
     :deep(.el-date-editor) {
       width: 100% !important;
+
+      .el-input__wrapper {
+        height: 48px !important;
+        font-size: 16px !important;
+      }
     }
 
     /* 按钮组优化 */
     :deep(.el-col:last-child) {
       display: flex !important;
-      gap: 8px !important;
+      gap: 12px !important;
 
       .el-button {
         flex: 1;
-        min-height: 44px;
+        height: 48px;
         font-size: 16px;
+        border-radius: 10px;
       }
     }
   }
 
-  .card-metrics {
-    grid-template-columns: repeat(2, 1fr);
+  /* 表格区域优化 */
+  .table-section {
+    padding: 16px;
+    border-radius: 12px;
   }
 
-  /* 移动端卡片按钮优化 */
-  .card-actions {
-    .el-button {
-      min-height: 44px;
-      font-size: 16px;
+  /* 移动端卡片布局优化 */
+  .mobile-cards {
+    gap: 12px;
+  }
+
+  .record-card {
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     }
   }
 
-  /* 移动端折叠面板按钮优化 */
-  .el-collapse-item__header {
-    min-height: 44px;
+  /* 卡片头部优化 */
+  .card-header {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+
+  .date {
+    font-size: 18px;
+  }
+
+  .volume {
     font-size: 16px;
+  }
+
+  /* 卡片指标优化 */
+  .card-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .metric-item {
+    padding: 12px 8px;
+    border-radius: 8px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  /* 高级指标优化 */
+  .advanced-metrics {
+    gap: 10px;
+  }
+
+  .advanced-row {
+    padding: 10px 12px;
+    border-radius: 8px;
+    min-height: 44px;
+  }
+
+  .adv-label {
+    font-size: 14px;
+  }
+
+  .adv-value {
+    font-size: 15px;
+  }
+
+  .adv-label-full {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  /* 股票列表优化 */
+  .stock-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    min-height: 48px;
+  }
+
+  .stock-name {
+    font-size: 15px;
+  }
+
+  /* 板块标签优化 */
+  .sectors-list {
+    gap: 8px;
+  }
+
+  /* 卡片操作按钮优化 */
+  .card-actions {
+    margin-top: 16px;
+    padding-top: 16px;
+    gap: 12px;
+
+    .el-button {
+      height: 48px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+  }
+
+  /* 折叠面板优化 */
+  :deep(.el-collapse) {
+    border: none;
+
+    .el-collapse-item__header {
+      height: 48px;
+      font-size: 15px;
+      border-radius: 10px;
+      padding: 0 16px;
+      background: #f7f8fa;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+
+      &:active {
+        background-color: #e5e6eb;
+      }
+
+      .el-collapse-item__arrow {
+        margin-left: auto;
+      }
+    }
+
+    .el-collapse-item__wrap {
+      border-radius: 0 0 10px 10px;
+      background: transparent;
+    }
+
+    .el-collapse-item__content {
+      padding: 12px 0;
+    }
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 60px 20px;
+
+    .el-empty__description {
+      font-size: 15px !important;
+    }
+
+    .el-button {
+      height: 48px;
+      font-size: 16px;
+      border-radius: 12px;
+      padding: 0 24px;
+    }
+  }
+
+  /* 加载更多按钮优化 */
+  .load-more-container {
+    padding: 20px 0;
+    margin-top: 20px;
+  }
+
+  .load-more-btn {
+    width: 100%;
+    max-width: 300px;
+    height: 48px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .no-more-tag {
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 10px;
+  }
+
+  /* 对话框优化 */
+  :deep(.el-dialog) {
+    width: 95% !important;
+    max-width: 400px !important;
+    border-radius: 16px;
+    margin: 0 auto;
+
+    .el-dialog__header {
+      padding: 20px 20px 16px;
+
+      .el-dialog__title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+
+    .el-dialog__body {
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .el-dialog__footer {
+      padding: 16px 20px 20px;
+    }
+  }
+
+  /* 表单优化 */
+  :deep(.el-form) {
+    .el-form-item__label {
+      font-size: 14px;
+      height: auto;
+      line-height: normal;
+      margin-bottom: 8px;
+    }
+
+    .el-input__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
+    }
+
+    .el-textarea__inner {
+      font-size: 16px !important;
+      border-radius: 10px;
+      padding: 12px;
+      line-height: 1.6;
+    }
+
+    .el-select {
+      width: 100%;
+    }
+
+    .el-select__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
+    }
+  }
+
+  /* 按钮优化 */
+  :deep(.el-button) {
+    height: 48px;
+    font-size: 16px;
+    border-radius: 10px;
+    padding: 0 20px;
+  }
+
+  /* 标签优化 - 确保最小点击区域 */
+  :deep(.el-tag) {
+    font-size: 13px;
+    padding: 6px 12px;
+    min-height: 32px;
+    line-height: 20px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+
+    &.el-tag--closeable {
+      .el-tag__close {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+
+  /* 描述列表优化 */
+  :deep(.el-descriptions) {
+    .el-descriptions__label,
+    .el-descriptions__content {
+      font-size: 14px;
+      padding: 12px 16px;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .review-records {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .header-actions .el-button {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  /* 筛选区域 */
+  .filters-section {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  /* 卡片优化 */
+  .record-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .card-header {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .date {
+    font-size: 16px;
+  }
+
+  .volume {
+    font-size: 15px;
+  }
+
+  /* 卡片指标 */
+  .card-metrics {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .metric-item {
+    padding: 10px 6px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+  }
+
+  .metric-value {
+    font-size: 16px;
+  }
+
+  /* 高级指标 */
+  .advanced-row {
+    padding: 8px 10px;
+  }
+
+  .adv-label {
+    font-size: 13px;
+  }
+
+  .adv-value {
+    font-size: 14px;
+  }
+
+  .adv-label-full {
+    font-size: 13px;
+  }
+
+  /* 股票列表 */
+  .stock-item {
+    padding: 8px 10px;
+    min-height: 44px;
+  }
+
+  .stock-name {
+    font-size: 14px;
+  }
+
+  /* 卡片操作 */
+  .card-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    gap: 10px;
+
+    .el-button {
+      height: 48px;
+      font-size: 15px;
+      border-radius: 8px;
+    }
+  }
+
+  /* 折叠面板 */
+  :deep(.el-collapse) {
+    .el-collapse-item__header {
+      height: 44px;
+      font-size: 14px;
+      border-radius: 8px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+
+      &:active {
+        background-color: #e5e6eb;
+      }
+
+      .el-collapse-item__arrow {
+        margin-left: auto;
+      }
+    }
+
+    .el-collapse-item__wrap {
+      background: transparent;
+    }
+  }
+
+  /* 对话框 */
+  :deep(.el-dialog) {
+    width: 95% !important;
+    border-radius: 12px;
+
+    .el-dialog__header {
+      padding: 16px;
+
+      .el-dialog__title {
+        font-size: 16px;
+      }
+    }
+
+    .el-dialog__body {
+      padding: 16px;
+    }
+
+    .el-dialog__footer {
+      padding: 12px 16px 16px;
+    }
+  }
+
+  /* 表单 */
+  :deep(.el-form) {
+    .el-form-item__label {
+      font-size: 13px;
+    }
+
+    .el-input__wrapper,
+    .el-select__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 8px;
+    }
+
+    .el-textarea__inner {
+      font-size: 16px !important;
+      border-radius: 8px;
+      padding: 10px;
+    }
+  }
+
+  /* 按钮 */
+  :deep(.el-button) {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  /* 标签 */
+  :deep(.el-tag) {
+    font-size: 12px;
+    padding: 5px 10px;
+    min-height: 30px;
+    line-height: 18px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+  }
+
+  /* 空状态 */
+  :deep(.el-empty) {
+    padding: 48px 16px;
+
+    .el-empty__description {
+      font-size: 14px !important;
+    }
+
+    .el-button {
+      height: 48px;
+      font-size: 15px;
+      padding: 0 20px;
+    }
+  }
+
+  /* 加载更多 */
+  .load-more-btn {
+    height: 48px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  .no-more-tag {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  /* 表格区域 */
+  .table-section {
+    padding: 12px;
+    border-radius: 10px;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .review-records {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
   }
 }
 </style>

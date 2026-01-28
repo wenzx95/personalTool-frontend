@@ -808,11 +808,484 @@ watch(selectedDate, (newValue) => {
   color: var(--color-text-primary);
 }
 
-/* 移动端优化 */
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
 @media (max-width: 768px) {
   /* 页面容器优化 */
   .data-collection {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 页面头部优化 */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: flex;
+
+    .el-button {
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      .el-icon {
+        font-size: 18px;
+      }
+    }
+  }
+
+  /* 卡片优化 */
+  .collection-card {
+    :deep(.el-card) {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    :deep(.el-card__body) {
+      padding: 16px;
+    }
+  }
+
+  /* 步骤进度指示器优化 */
+  .step-progress {
+    padding: 20px 0;
+    margin-bottom: 20px;
+    gap: 8px;
+  }
+
+  .step-item {
+    gap: 8px;
+  }
+
+  .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .step-label {
+    font-size: 12px;
+  }
+
+  .step-line {
+    min-width: 40px;
+    max-width: 60px;
+  }
+
+  .step-item.active .step-number {
+    box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+  }
+
+  /* 步骤区域优化 */
+  .step-section {
+    padding: 16px 0;
+
+    &:first-child {
+      padding-top: 8px;
+    }
+  }
+
+  .step-header {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .step-icon {
+    font-size: 22px;
+  }
+
+  .step-title {
+    font-size: 18px;
+  }
+
+  .step-content {
+    padding-left: 0;
+  }
+
+  /* 日期选择器优化 */
+  :deep(.el-date-editor) {
+    width: 100% !important;
+    max-width: 100%;
+
+    .el-input__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 12px;
+    }
+  }
+
+  /* Alert提示框优化 */
+  :deep(.el-alert) {
+    padding: 12px 16px;
+    border-radius: 10px;
+
+    .el-alert__title {
+      font-size: 14px;
+    }
+
+    .el-alert__description {
+      font-size: 13px;
+    }
+  }
+
+  /* 按钮优化 */
+  .el-button {
+    height: 48px;
+    padding: 0 20px;
+    font-size: 16px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    .el-icon {
+      font-size: 18px;
+    }
+  }
+
+  /* 进度条优化 */
+  :deep(.el-progress) {
+    .el-progress__bar {
+      height: 10px !important;
+    }
+
+    .el-progress__text {
+      font-size: 14px !important;
+    }
+  }
+
+  .progress-text {
+    font-size: 13px;
+  }
+
+  /* 折叠面板优化 */
+  :deep(.el-collapse) {
+    border-radius: 10px;
+    border: none;
+
+    .el-collapse-item__header {
+      height: 48px;
+      font-size: 15px;
+      border-radius: 10px;
+      padding: 0 16px;
+    }
+
+    .el-collapse-item__wrap {
+      border-radius: 0 0 10px 10px;
+    }
+
+    .el-collapse-item__content {
+      padding: 12px;
+    }
+  }
+
+  /* 日志容器优化 */
+  .log-container {
+    max-height: 250px;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .log-item {
+    margin-bottom: 3px;
+    padding: 2px 0;
+    font-size: 12px;
+  }
+
+  /* 表单优化 */
+  :deep(.el-form) {
+    .el-form-item__label {
+      font-size: 14px;
+      height: 48px;
+      line-height: 48px;
+    }
+
+    /* 输入框优化 */
+    .el-input__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
+    }
+
+    /* 数字输入框优化 */
+    .el-input-number {
+      width: 100%;
+
+      .el-input__wrapper {
+        height: 48px !important;
+      }
+
+      .el-input-number__decrease,
+      .el-input-number__increase {
+        width: 40px;
+        height: 24px;
+        line-height: 24px;
+        font-size: 16px;
+      }
+    }
+
+    /* 选择器优化 */
+    .el-select {
+      width: 100%;
+
+      .el-select__wrapper {
+        height: 48px !important;
+        font-size: 16px !important;
+        border-radius: 10px;
+      }
+    }
+
+    /* 文本域优化 */
+    .el-textarea__inner {
+      font-size: 16px !important;
+      line-height: 1.6;
+      border-radius: 10px;
+      padding: 12px;
+    }
+  }
+
+  /* 表单列布局优化 */
+  :deep(.el-row) {
+    .el-col {
+      margin-bottom: 12px;
+    }
+  }
+
+  /* 分隔线优化 */
+  :deep(.el-divider) {
+    margin: 20px 0;
+
+    .el-divider__text {
+      font-size: 14px;
+    }
+
+    &.el-divider--horizontal {
+      margin: 20px 0;
+    }
+  }
+
+  .section-title {
+    font-size: 14px;
+  }
+
+  /* 响应式列布局 */
+  :deep(.el-col-8),
+  :deep(.el-col-12) {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  /* 标签宽度优化 */
+  :deep(.el-form) {
+    .el-form-item {
+      margin-bottom: 16px;
+    }
+
+    &.el-form--label-left .el-form-item__label {
+      width: 100% !important;
+      text-align: left;
+      margin-bottom: 8px;
+      height: auto;
+      line-height: normal;
+    }
+
+    .el-form-item__content {
+      margin-left: 0 !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .data-collection {
     padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .header-actions .el-button {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .collection-card {
+    :deep(.el-card__body) {
+      padding: 14px;
+    }
+  }
+
+  /* 步骤进度指示器 */
+  .step-progress {
+    padding: 16px 0;
+    margin-bottom: 16px;
+  }
+
+  .step-number {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .step-label {
+    font-size: 11px;
+  }
+
+  .step-line {
+    min-width: 30px;
+    max-width: 40px;
+  }
+
+  /* 步骤区域 */
+  .step-section {
+    padding: 12px 0;
+  }
+
+  .step-header {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .step-icon {
+    font-size: 20px;
+  }
+
+  .step-title {
+    font-size: 16px;
+  }
+
+  /* 表单元素 */
+  :deep(.el-form) {
+    .el-form-item__label {
+      font-size: 13px;
+    }
+
+    .el-input__wrapper,
+    .el-select__wrapper {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 8px;
+    }
+
+    .el-textarea__inner {
+      font-size: 16px !important;
+      border-radius: 8px;
+      padding: 10px;
+    }
+  }
+
+  /* 按钮优化 */
+  .el-button {
+    height: 48px;
+    font-size: 15px;
+    padding: 0 16px;
+    border-radius: 10px;
+  }
+
+  /* 日志容器 */
+  .log-container {
+    max-height: 200px;
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .log-item {
+    font-size: 11px;
+  }
+
+  /* Alert提示框 */
+  :deep(.el-alert) {
+    padding: 10px 12px;
+    border-radius: 8px;
+
+    .el-alert__title {
+      font-size: 13px;
+    }
+  }
+
+  /* 折叠面板 */
+  :deep(.el-collapse) {
+    .el-collapse-item__header {
+      height: 44px;
+      font-size: 14px;
+      border-radius: 8px;
+      padding: 0 12px;
+    }
+
+    .el-collapse-item__content {
+      padding: 10px;
+    }
+  }
+
+  /* 进度条 */
+  :deep(.el-progress) {
+    .el-progress__bar {
+      height: 8px !important;
+    }
+  }
+
+  /* 分隔线 */
+  :deep(.el-divider) {
+    margin: 16px 0;
+
+    .el-divider__text {
+      font-size: 13px;
+    }
+  }
+
+  .section-title {
+    font-size: 13px;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .data-collection {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
   }
 }
 </style>

@@ -1,0 +1,525 @@
+// ============================================================
+// PersonalTool 统一移动端样式库
+// ============================================================
+// 版本：v1.0.0
+// 更新日期：2026-01-28
+// 用途：提供统一的移动端设计规范和通用组件样式
+// ============================================================
+
+// === 断点定义 ===
+$mobile-breakpoint: 768px;      // 平板和手机
+$phone-breakpoint: 430px;       // 小屏手机（iPhone 15 Pro等）
+
+// === 字体系统 ===
+$mobile-font-xs: 12px;    // 辅助文字
+$mobile-font-sm: 14px;    // 次要文字
+$mobile-font-base: 16px;  // 基础文字（iOS最小值，防止自动缩放）
+$mobile-font-lg: 18px;    // 小标题
+$mobile-font-xl: 22px;    // 页面标题
+$mobile-font-2xl: 28px;   // 大标题
+
+// === 间距系统（16px基准） ===
+$mobile-space-xs: 4px;
+$mobile-space-sm: 8px;
+$mobile-space-md: 12px;
+$mobile-space-lg: 16px;     // 标准边距
+$mobile-space-xl: 20px;
+$mobile-space-2xl: 24px;
+
+// === 触控目标（iOS Human Interface Guidelines） ===
+$touch-target-min: 44px;
+$touch-target-comfortable: 48px;
+
+// === 圆角系统 ===
+$mobile-radius-sm: 8px;    // 小卡片、按钮
+$mobile-radius-md: 12px;   // 标准卡片
+$mobile-radius-lg: 16px;   // 大卡片、对话框
+$mobile-radius-xl: 20px;   // 特殊元素（如抽屉）
+
+// === 阴影系统（轻量扁平化） ===
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.10);
+
+// ============================================================
+// 移动端通用样式（@media (max-width: 768px)）
+// ============================================================
+
+@media (max-width: 768px) {
+  // === 页面容器 ===
+  .mobile-page {
+    min-height: 100vh;
+    padding: 20px 16px;
+    padding-top: calc(20px + var(--safe-area-inset-top, 0px));
+    padding-bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
+    background: #f7f8fa;
+  }
+
+  // === 卡片组件 ===
+  .mobile-card {
+    background: #fff;
+    border-radius: $mobile-radius-md;
+    padding: $mobile-space-lg;
+    margin-bottom: $mobile-space-md;
+    box-shadow: $shadow-sm;
+  }
+
+  .mobile-card-lg {
+    border-radius: $mobile-radius-lg;
+    padding: $mobile-space-xl;
+  }
+
+  .mobile-card-xl {
+    border-radius: $mobile-radius-xl;
+    padding: $mobile-space-2xl;
+  }
+
+  // === 按钮组件 ===
+  .mobile-btn {
+    min-height: $touch-target-comfortable;
+    padding: 0 20px;
+    font-size: $mobile-font-base;
+    border-radius: $mobile-radius-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    outline: none;
+    user-select: none;
+
+    &:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+
+    &.primary {
+      background: #3370ff;
+      color: #fff;
+    }
+
+    &.secondary {
+      background: #f0f5ff;
+      color: #3370ff;
+    }
+
+    &.danger {
+      background: #fff5f5;
+      color: #f56565;
+    }
+  }
+
+  .mobile-btn-sm {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: $mobile-font-sm;
+  }
+
+  .mobile-btn-lg {
+    min-height: 52px;
+    padding: 0 24px;
+    font-size: $mobile-font-lg;
+  }
+
+  .mobile-btn-block {
+    width: 100%;
+    display: flex;
+  }
+
+  // === 列表项 ===
+  .mobile-list-item {
+    display: flex;
+    align-items: center;
+    padding: $mobile-space-lg;
+    min-height: $touch-target-min;
+    background: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:active {
+      background: #f7f8fa;
+    }
+  }
+
+  .mobile-list-item-compact {
+    padding: $mobile-space-md;
+    min-height: 40px;
+  }
+
+  // === 表单容器 ===
+  .mobile-form {
+    .form-group {
+      margin-bottom: $mobile-space-lg;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: $mobile-space-sm;
+      font-size: $mobile-font-sm;
+      color: #4e5969;
+      font-weight: 500;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      height: $touch-target-comfortable;
+      font-size: $mobile-font-base;
+      padding: 0 $mobile-space-lg;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: $mobile-radius-sm;
+      background: #fff;
+      color: #1d2129;
+      outline: none;
+      transition: all 0.2s;
+
+      &:focus {
+        border-color: #3370ff;
+        box-shadow: 0 0 0 2px rgba(51, 112, 255, 0.1);
+      }
+
+      &::placeholder {
+        color: #86909c;
+      }
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      padding: $mobile-space-md $mobile-space-lg;
+      resize: vertical;
+    }
+
+    .form-button {
+      width: 100%;
+      height: 50px;
+      margin-top: $mobile-space-lg;
+      font-size: $mobile-font-lg;
+      font-weight: 600;
+      border-radius: $mobile-radius-md;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:active {
+        transform: scale(0.98);
+      }
+    }
+  }
+
+  // === 标题系统 ===
+  .mobile-title-xl {
+    font-size: $mobile-font-2xl;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: $mobile-space-lg;
+    color: #1d2129;
+  }
+
+  .mobile-title-lg {
+    font-size: $mobile-font-xl;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: $mobile-space-md;
+    color: #1d2129;
+  }
+
+  .mobile-title-md {
+    font-size: $mobile-font-lg;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: $mobile-space-sm;
+    color: #1d2129;
+  }
+
+  .mobile-title-sm {
+    font-size: $mobile-font-base;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: $mobile-space-sm;
+    color: #1d2129;
+  }
+
+  // === 文本系统 ===
+  .mobile-text-primary {
+    font-size: $mobile-font-base;
+    color: #1d2129;
+    line-height: 1.5;
+  }
+
+  .mobile-text-secondary {
+    font-size: $mobile-font-sm;
+    color: #4e5969;
+    line-height: 1.5;
+  }
+
+  .mobile-text-tertiary {
+    font-size: $mobile-font-xs;
+    color: #86909c;
+    line-height: 1.5;
+  }
+
+  // === 网格系统 ===
+  .mobile-grid {
+    display: grid;
+    gap: $mobile-space-md;
+  }
+
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $mobile-space-sm;
+  }
+
+  .mobile-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: $mobile-space-sm;
+  }
+
+  // === 分隔线 ===
+  .mobile-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.06);
+    margin: $mobile-space-lg 0;
+  }
+
+  .mobile-divider-thick {
+    height: 8px;
+    background: #f7f8fa;
+    margin: $mobile-space-xl 0;
+  }
+
+  // === 空状态 ===
+  .mobile-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #86909c;
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: $mobile-space-lg;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: $mobile-font-base;
+      margin-bottom: $mobile-space-sm;
+    }
+
+    .empty-description {
+      font-size: $mobile-font-sm;
+    }
+  }
+
+  // === 加载状态 ===
+  .mobile-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #86909c;
+  }
+
+  // === 标签 ===
+  .mobile-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: $mobile-font-xs;
+    font-weight: 500;
+    border-radius: 4px;
+    line-height: 1.5;
+
+    &.primary {
+      background: #e8f3ff;
+      color: #3370ff;
+    }
+
+    &.success {
+      background: #e8f5e9;
+      color: #00b42a;
+    }
+
+    &.warning {
+      background: #fff7e8;
+      color: #ff7d00;
+    }
+
+    &.danger {
+      background: #ffece8;
+      color: #f56565;
+    }
+  }
+
+  // === 徽章 ===
+  .mobile-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: $mobile-font-xs;
+    font-weight: 600;
+    border-radius: 10px;
+    background: #f56565;
+    color: #fff;
+
+    &.dot {
+      width: 8px;
+      height: 8px;
+      padding: 0;
+      border-radius: 50%;
+    }
+  }
+
+  // === 分组 ===
+  .mobile-group {
+    background: #fff;
+    border-radius: $mobile-radius-md;
+    overflow: hidden;
+    box-shadow: $shadow-sm;
+    margin-bottom: $mobile-space-md;
+  }
+
+  .mobile-group-title {
+    padding: $mobile-space-md $mobile-space-lg;
+    font-size: $mobile-font-sm;
+    font-weight: 600;
+    color: #86909c;
+    background: #f7f8fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  // === 安全区域辅助类 ===
+  .safe-top {
+    padding-top: var(--safe-area-inset-top, 0px);
+  }
+
+  .safe-bottom {
+    padding-bottom: var(--safe-area-inset-bottom, 0px);
+  }
+
+  .safe-all {
+    padding-top: var(--safe-area-inset-top, 0px);
+    padding-bottom: var(--safe-area-inset-bottom, 0px);
+  }
+
+  // === 实用工具类 ===
+  .mobile-text-center {
+    text-align: center;
+  }
+
+  .mobile-text-right {
+    text-align: right;
+  }
+
+  .mobile-flex {
+    display: flex;
+  }
+
+  .mobile-flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  // === 触摸反馈优化 ===
+  .mobile-touch-feedback {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+
+    &:active {
+      opacity: 0.7;
+    }
+  }
+
+  // === 滚动优化 ===
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+
+  // === 表格响应式容器 ===
+  .mobile-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 (-$mobile-space-lg);
+    padding: 0 $mobile-space-lg;
+
+    table {
+      min-width: 600px;
+    }
+  }
+}
+
+// ============================================================
+// 小屏手机进一步优化（@media (max-width: 430px)）
+// ============================================================
+
+@media (max-width: 430px) {
+  .mobile-page {
+    padding: 16px 12px;
+  }
+
+  .mobile-card {
+    padding: $mobile-space-md;
+    border-radius: $mobile-radius-sm;
+    margin-bottom: $mobile-space-sm;
+  }
+
+  .mobile-btn {
+    min-height: 44px;
+    padding: 0 16px;
+  }
+
+  .mobile-title-xl {
+    font-size: 24px;
+  }
+
+  .mobile-title-lg {
+    font-size: 20px;
+  }
+}
+
+// ============================================================
+// PWA Standalone模式特殊优化
+// ============================================================
+
+html.standalone-mode {
+  @media (max-width: 768px) {
+    // 页面顶部适配刘海屏
+    .mobile-page {
+      padding-top: calc(24px + var(--safe-area-inset-top, 0px));
+    }
+
+    // 底部导航适配Home Indicator
+    .has-bottom-nav {
+      padding-bottom: calc(76px + var(--safe-area-inset-bottom, 0px));
+    }
+  }
+
+  @media (max-width: 430px) {
+    .mobile-page {
+      padding-top: calc(20px + var(--safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
+    }
+  }
+}

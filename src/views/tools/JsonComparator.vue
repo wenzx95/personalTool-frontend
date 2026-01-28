@@ -1903,4 +1903,365 @@ defineExpose({
     flex-direction: column;
   }
 }
+
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 页面容器优化 */
+  .json-comparator {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 编辑模式布局优化 */
+  .compare-mode.edit-mode {
+    gap: 12px;
+  }
+
+  /* 案例面板优化 */
+  .cases-panel {
+    border-radius: 12px;
+    overflow: hidden;
+
+    .panel-header {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .cases-source-switcher {
+        width: 100%;
+
+        .el-button-group {
+          display: flex;
+          width: 100%;
+
+          .el-button {
+            flex: 1;
+            height: 40px;
+            font-size: 14px;
+            border-radius: 8px;
+          }
+        }
+      }
+    }
+
+    .panel-body {
+      padding: 0;
+    }
+  }
+
+  /* 案例列表优化 */
+  .cases-body {
+    .empty-cases {
+      padding: 40px 16px;
+
+      .el-icon {
+        font-size: 48px;
+      }
+
+      span {
+        font-size: 14px;
+      }
+    }
+
+    .case-item {
+      padding: 10px 12px;
+      min-height: 48px;
+      border-radius: 8px;
+
+      &:active {
+        background-color: #e6f7ff;
+      }
+
+      .case-icon {
+        font-size: 18px;
+      }
+
+      .case-name {
+        font-size: 14px;
+      }
+
+      .case-item-actions {
+        .el-button {
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+
+          .el-icon {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+  }
+
+  /* 操作按钮区优化 */
+  .actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0;
+
+    .el-button {
+      flex: 1;
+      min-width: calc(50% - 4px);
+      height: 44px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+  }
+
+  /* 主内容区优化 */
+  .main-content {
+    .toolbar {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .el-button {
+        height: 40px;
+        font-size: 14px;
+        border-radius: 8px;
+      }
+    }
+
+    .compare-panels {
+      gap: 12px;
+    }
+  }
+
+  /* 对比面板优化 */
+  .compare-panel {
+    border-radius: 10px;
+
+    .panel-header {
+      padding: 12px;
+      border-radius: 10px 10px 0 0;
+
+      .panel-title {
+        font-size: 15px;
+      }
+
+      .panel-actions {
+        .el-button {
+          height: 32px;
+          font-size: 13px;
+        }
+      }
+    }
+
+    .panel-body {
+      padding: 12px;
+
+      :deep(.el-textarea__inner) {
+        font-size: 14px !important;
+        border-radius: 8px;
+      }
+    }
+  }
+
+  /* 结果面板优化 */
+  .result-panel {
+    border-radius: 10px;
+
+    .panel-header {
+      padding: 12px;
+      border-radius: 10px 10px 0 0;
+
+      .panel-title {
+        font-size: 15px;
+      }
+    }
+
+    .panel-body {
+      padding: 12px;
+      border-radius: 0 0 10px 10px;
+    }
+  }
+
+  /* 差异结果优化 */
+  .diff-result {
+    .diff-item {
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+
+      .diff-path {
+        font-size: 12px;
+      }
+    }
+  }
+
+  /* 面板标题编辑优化 */
+  .panel-title-wrapper {
+    padding: 6px 10px;
+    border-radius: 6px;
+
+    .edit-icon {
+      font-size: 16px;
+    }
+  }
+
+  /* 对比模式优化 */
+  .compare-view {
+    gap: 12px;
+
+    .cases-panel {
+      border-radius: 10px;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .json-comparator {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  /* 案例面板 */
+  .cases-panel {
+    .panel-header {
+      padding: 10px 12px;
+
+      .panel-title {
+        font-size: 15px;
+      }
+
+      .cases-source-switcher {
+        .el-button-group {
+          .el-button {
+            height: 38px;
+            font-size: 13px;
+          }
+        }
+      }
+    }
+  }
+
+  /* 案例列表 */
+  .cases-body {
+    .case-item {
+      padding: 8px 10px;
+      min-height: 44px;
+
+      .case-icon {
+        font-size: 16px;
+      }
+
+      .case-name {
+        font-size: 13px;
+      }
+    }
+  }
+
+  /* 操作按钮 */
+  .actions {
+    .el-button {
+      height: 44px;
+      font-size: 14px;
+    }
+  }
+
+  /* 工具栏 */
+  .main-content {
+    .toolbar {
+      padding: 10px;
+      border-radius: 8px;
+
+      .el-button {
+        height: 38px;
+        font-size: 13px;
+      }
+    }
+
+    .compare-panels {
+      gap: 10px;
+    }
+  }
+
+  /* 对比面板 */
+  .compare-panel {
+    border-radius: 8px;
+
+    .panel-header {
+      padding: 10px;
+      border-radius: 8px 8px 0 0;
+
+      .panel-title {
+        font-size: 14px;
+      }
+
+      .panel-actions {
+        .el-button {
+          height: 30px;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .panel-body {
+      padding: 10px;
+
+      :deep(.el-textarea__inner) {
+        font-size: 13px !important;
+        border-radius: 6px;
+      }
+    }
+  }
+
+  /* 结果面板 */
+  .result-panel {
+    border-radius: 8px;
+
+    .panel-header {
+      padding: 10px;
+      border-radius: 8px 8px 0 0;
+
+      .panel-title {
+        font-size: 14px;
+      }
+    }
+
+    .panel-body {
+      padding: 10px;
+      border-radius: 0 0 8px 8px;
+    }
+  }
+
+  /* 差异结果 */
+  .diff-result {
+    .diff-item {
+      padding: 6px 8px;
+      font-size: 12px;
+
+      .diff-path {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .json-comparator {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
 </style>

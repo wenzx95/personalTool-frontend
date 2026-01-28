@@ -666,53 +666,285 @@ const exportReport = () => {
 }
 
 @media (max-width: 640px) {
+  /* 页面容器优化 */
+  .accounting-dashboard {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
   .summary-cards {
     grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .chart-card {
     grid-column: span 1;
   }
 
-  /* 移动端优化 */
+  /* 页面头部优化 */
   .page-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
   }
 
   .header-actions {
     width: 100%;
+    display: flex;
     flex-direction: column;
+    gap: 12px;
 
     .el-button {
       width: 100%;
-      min-height: 48px;
-      font-size: 15px;
+      height: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      .el-icon {
+        font-size: 18px;
+      }
     }
   }
 
-  /* 移动端卡片优化 */
+  /* 汇总卡片优化 */
   .summary-card {
-    padding: var(--spacing-md);
+    padding: 16px;
+    border-radius: 12px;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.99);
+    }
   }
 
   .card-icon {
     width: 48px;
     height: 48px;
-    font-size: 1.25rem;
+    font-size: 20px;
+    border-radius: 12px;
+  }
+
+  .card-label {
+    font-size: 13px;
   }
 
   .card-value {
-    font-size: 1.25rem;
+    font-size: 22px;
+    line-height: 1.2;
   }
 
-  /* 移动端图表优化 */
+  .card-trend {
+    font-size: 13px;
+  }
+
+  /* 仪表板卡片优化 */
   .dashboard-card {
-    padding: var(--spacing-md);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-header {
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .card-body {
+    height: 240px;
+  }
+
+  /* 图表卡片特殊优化 */
+  .chart-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    .el-radio-group {
+      width: 100%;
+      display: flex;
+
+      :deep(.el-radio-button) {
+        flex: 1;
+
+        .el-radio-button__inner {
+          width: 100%;
+          height: 40px;
+          font-size: 14px;
+          border-radius: 8px;
+        }
+      }
+    }
+  }
+
+  .chart {
+    height: 100%;
+  }
+
+  /* 交易列表优化 */
+  .transaction-card .card-header {
+    .el-button {
+      font-size: 14px;
+      padding: 4px 8px;
+      height: auto;
+    }
+  }
+
+  .transaction-list {
+    gap: 10px;
+  }
+
+  .transaction-item {
+    padding: 12px;
+    border-radius: 10px;
+    min-height: 60px;
+
+    &:active {
+      background: #f7f8fa;
+    }
+  }
+
+  .transaction-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .transaction-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .transaction-title {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .transaction-meta {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .transaction-amount {
+    font-size: 15px;
+  }
+
+  /* 预算进度优化 */
+  .budget-list {
+    gap: 14px;
+  }
+
+  .budget-item {
+    gap: 8px;
+  }
+
+  .budget-header {
+    font-size: 13px;
+  }
+
+  :deep(.el-progress) {
+    .el-progress__text {
+      font-size: 12px !important;
+    }
+
+    .el-progress__bar {
+      height: 8px !important;
+    }
+
+    .el-progress__outer {
+      height: 8px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化（430px）
+   ============================================================ */
+@media (max-width: 430px) {
+  .accounting-dashboard {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .header-actions .el-button {
+    height: 48px;
+    font-size: 15px;
+
+    .el-icon {
+      font-size: 17px;
+    }
+  }
+
+  .summary-cards {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 14px;
+    border-radius: 10px;
+    gap: 10px;
+  }
+
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  .card-value {
+    font-size: 20px;
+  }
+
+  .dashboard-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .card-title {
+    font-size: 15px;
   }
 
   .card-body {
@@ -720,40 +952,51 @@ const exportReport = () => {
   }
 
   .chart-card .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: 10px;
 
-    .el-radio-group {
-      width: 100%;
-
-      .el-radio-button {
-        flex: 1;
-      }
+    .el-radio-group :deep(.el-radio-button__inner) {
+      height: 38px;
+      font-size: 13px;
     }
   }
 
-  /* 交易列表优化 */
   .transaction-item {
-    padding: var(--spacing-sm);
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 56px;
   }
 
   .transaction-icon {
     width: 36px;
     height: 36px;
+    font-size: 15px;
   }
 
-  /* 预算进度优化 */
-  .budget-item {
-    gap: var(--spacing-xs);
+  .transaction-title {
+    font-size: 13px;
+  }
+
+  .transaction-amount {
+    font-size: 14px;
+  }
+
+  .budget-list {
+    gap: 12px;
   }
 
   .budget-header {
-    font-size: 0.8125rem;
+    font-size: 12px;
   }
+}
 
-  :deep(.el-progress__text) {
-    font-size: 12px !important;
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 640px) {
+    .accounting-dashboard {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    }
   }
 }
 </style>

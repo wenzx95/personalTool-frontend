@@ -1,10 +1,15 @@
 <template>
   <el-container class="volc-layout">
-    <!-- 顶部导航栏 - 48px高度 (移动端隐藏) -->
-    <el-header v-show="!isMobile" class="volc-navbar" :class="{ 'mobile-navbar': isMobile }">
+    <!-- 顶部导航栏 - 48px高度 -->
+    <el-header class="volc-navbar" :class="{ 'mobile-navbar': isMobile }">
       <div class="navbar-left">
-        <!-- Logo -->
-        <div class="navbar-logo" @click="router.push('/tools/json')">
+        <!-- 移动端：汉堡菜单按钮 -->
+        <div v-if="isMobile" class="hamburger-btn" @click="mobileDrawerOpen = true">
+          <el-icon :size="24"><Menu /></el-icon>
+        </div>
+
+        <!-- 桌面端：Logo -->
+        <div v-else class="navbar-logo" @click="router.push('/tools/json')">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon">
             <rect width="24" height="24" rx="6" fill="#3370ff"/>
             <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -208,15 +213,10 @@
       <!-- 主内容区 -->
       <el-main class="volc-main">
         <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component
-              :is="Component"
-              :ref="setJsonToolsRef"
-              :active-tab="jsonToolActiveTab"
-              @show-examples="handleShowExamples"
-              @clear-all="handleClearAll"
-            />
-          </transition>
+          <component
+            :is="Component"
+            :key="route.fullPath"
+          />
         </router-view>
       </el-main>
     </el-container>
@@ -275,6 +275,63 @@
       </template>
     </el-dialog>
 
+    <!-- 移动端抽屉菜单 -->
+    <teleport to="body">
+      <transition name="drawer">
+        <div v-if="mobileDrawerOpen" class="mobile-drawer-overlay" @click="mobileDrawerOpen = false">
+          <div class="mobile-drawer" @click.stop>
+            <!-- 抽屉头部：用户信息 -->
+            <div class="drawer-header">
+              <div class="user-info" v-if="userStore.isLoggedIn">
+                <el-avatar :size="48" :icon="UserFilled" />
+                <div class="user-details">
+                  <div class="user-name">{{ userStore.user?.nickname || '用户' }}</div>
+                  <div class="user-account">{{ userStore.user?.username || '' }}</div>
+                </div>
+              </div>
+              <div class="user-info" v-else @click="goToLogin">
+                <el-avatar :size="48" :icon="UserFilled" />
+                <div class="user-details">
+                  <div class="user-name">点击登录</div>
+                  <div class="user-account">登录后使用更多功能</div>
+                </div>
+              </div>
+              <el-icon class="close-btn" @click="mobileDrawerOpen = false">
+                <Close />
+              </el-icon>
+            </div>
+
+            <!-- 抽屉菜单项 -->
+            <div class="drawer-menu">
+              <div
+                v-for="item in drawerMenuItems"
+                :key="item.key"
+                class="drawer-menu-item"
+                @click="handleDrawerMenuClick(item)"
+              >
+                <el-icon :size="20">
+                  <component :is="item.icon" />
+                </el-icon>
+                <span class="menu-label">{{ item.label }}</span>
+              </div>
+            </div>
+
+            <!-- 抽屉底部 -->
+            <div class="drawer-footer">
+              <div class="footer-item" @click="router.push('/profile'); mobileDrawerOpen = false">
+                <el-icon :size="20"><Setting /></el-icon>
+                <span>设置</span>
+              </div>
+              <div v-if="userStore.isLoggedIn" class="footer-item danger" @click="handleLogout">
+                <el-icon :size="20"><SwitchButton /></el-icon>
+                <span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
+
   </el-container>
 </template>
 
@@ -307,7 +364,8 @@ import {
   Reading,
   Menu,
   InfoFilled,
-  Setting
+  Setting,
+  Close
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
@@ -338,6 +396,51 @@ checkMobile()
 // 启用移动端左滑返回手势
 useSwipeBack()
 
+// 移动端抽屉菜单状态
+const mobileDrawerOpen = ref(false)
+
+// 抽屉菜单项配置
+const drawerMenuItems = computed(() => {
+  const items = [
+    { key: 'tools/json', label: '工具', icon: markRaw(Tools) },
+    { key: 'blog/list', label: '博客', icon: markRaw(DocumentCopy) },
+    { key: 'knowledge/list', label: '知识库', icon: markRaw(Notebook) }
+  ]
+
+  // 所有抽屉菜单项都无需登录即可访问
+  return items
+})
+
+// 处理抽屉菜单点击
+const handleDrawerMenuClick = (item: any) => {
+  // 跳转到对应页面（所有抽屉菜单项都无需登录）
+  mobileDrawerOpen.value = false
+  router.push(`/${item.key}`)
+}
+
+// 跳转到登录页
+const goToLogin = () => {
+  mobileDrawerOpen.value = false
+  router.push('/login')
+}
+
+// 处理退出登录
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm('确定要退出登录吗？', '退出登录', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    userStore.logout()
+    mobileDrawerOpen.value = false
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  } catch {
+    // User cancelled
+  }
+}
+
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
@@ -352,19 +455,17 @@ const mobileTabs = computed(() => {
 
   // 如果标记为显示主导航，或者路径是根路径，显示主导航
   if (showMainNav || currentPath === '/') {
-    const tabs = [
-      { key: 'tools/json', label: '工具', icon: markRaw(Tools) }
-    ]
+    const tabs = []
 
     if (userStore.isLoggedIn) {
+      // 已登录用户显示：股票、记账、我的
       tabs.push(
         { key: 'stock/overview', label: '股票', icon: markRaw(TrendCharts) },
         { key: 'accounting', label: '记账', icon: markRaw(Money) },
-        { key: 'blog/list', label: '博客', icon: markRaw(DocumentCopy) },
         { key: 'profile', label: '我的', icon: markRaw(User) }
       )
     } else {
-      // 未登录用户也能看到"我的"，方便登录
+      // 未登录用户只显示：我的
       tabs.push(
         { key: 'profile', label: '我的', icon: markRaw(User) }
       )
@@ -772,41 +873,48 @@ const filteredMenuSections = computed(() => {
 
   return menuSections.value
     .map(section => {
-      // 过滤菜单项
-      const filteredItems = section.items.filter(item => {
-        // 未登录用户只能看到工具
-        if (!userStore.isLoggedIn) {
-          return item.key === 'tools' || item.key.startsWith('tools/')
-        }
+      // 过滤并映射菜单项（创建新对象，不修改原始数据）
+      const filteredItems = section.items
+        .map(item => {
+          // 创建 item 的副本
+          const newItem = { ...item }
 
-        // 已登录用户：根据设备类型过滤
-        if (item.deviceType && item.deviceType !== 'all') {
-          // 检查设备类型是否匹配
-          if (item.deviceType === 'web' && currentDeviceType !== 'web') {
-            return false // 只在网页端显示，但当前不是网页端
-          }
-          if (item.deviceType === 'mobile' && currentDeviceType === 'web') {
-            return false // 只在移动端显示，但当前是网页端
-          }
-        }
-
-        // 过滤子菜单
-        if (item.children && item.children.length > 0) {
-          item.children = item.children.filter(child => {
-            if (child.deviceType && child.deviceType !== 'all') {
-              if (child.deviceType === 'web' && currentDeviceType !== 'web') {
-                return false
-              }
-              if (child.deviceType === 'mobile' && currentDeviceType === 'web') {
-                return false
-              }
+          // 未登录用户只能看到工具
+          if (!userStore.isLoggedIn) {
+            if (newItem.key !== 'tools' && !newItem.key.startsWith('tools/')) {
+              return null
             }
-            return true
-          })
-        }
+          }
 
-        return true
-      })
+          // 已登录用户：根据设备类型过滤
+          if (newItem.deviceType && newItem.deviceType !== 'all') {
+            // 检查设备类型是否匹配
+            if (newItem.deviceType === 'web' && currentDeviceType !== 'web') {
+              return null // 只在网页端显示，但当前不是网页端
+            }
+            if (newItem.deviceType === 'mobile' && currentDeviceType === 'web') {
+              return null // 只在移动端显示，但当前是网页端
+            }
+          }
+
+          // 过滤子菜单（创建新数组，不修改原始数据）
+          if (newItem.children && newItem.children.length > 0) {
+            newItem.children = newItem.children.filter(child => {
+              if (child.deviceType && child.deviceType !== 'all') {
+                if (child.deviceType === 'web' && currentDeviceType !== 'web') {
+                  return false
+                }
+                if (child.deviceType === 'mobile' && currentDeviceType === 'web') {
+                  return false
+                }
+              }
+              return true
+            })
+          }
+
+          return newItem
+        })
+        .filter(item => item !== null) as MenuItem[]
 
       return {
         ...section,
@@ -856,6 +964,15 @@ const toggleSubmenu = (key: string) => {
 }
 
 const handleNavClick = (key: string) => {
+  // 规范化路径：确保只有一个前导斜杠，移除多余斜杠
+  const normalizedKey = key.replace(/^\/+/, '') // 移除所有前导斜杠
+  const targetPath = `/${normalizedKey}`
+
+  // 如果已经在目标路径，不重复导航
+  if (route.path === targetPath) {
+    return
+  }
+
   // 处理"我的"选项 - 跳转到个人中心页面
   if (key === 'profile') {
     router.push('/profile')
@@ -906,10 +1023,8 @@ const handleNavClick = (key: string) => {
     return
   }
 
-  // 规范化路径：确保只有一个前导斜杠，移除多余斜杠
-  const normalizedKey = key.replace(/^\/+/, '') // 移除所有前导斜杠
-  const path = `/${normalizedKey}`
-  router.push(path)
+  // 使用已经计算好的路径进行导航
+  router.push(targetPath)
 }
 
 const toggleSidebar = () => {
@@ -1839,6 +1954,226 @@ html.standalone-mode {
         padding-top: 16px;
       }
     }
+  }
+}
+
+/* 移动端汉堡菜单按钮 */
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+  color: #1d2129;
+
+  &:active {
+    background: #f7f8fa;
+  }
+}
+
+/* 移动端抽屉菜单遮罩层 */
+.mobile-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+  display: flex;
+  align-items: stretch;
+}
+
+/* 移动端抽屉菜单主体 */
+.mobile-drawer {
+  width: 280px;
+  max-width: 80vw;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
+  position: relative;
+  border-top-right-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+/* 抽屉头部 */
+.drawer-header {
+  padding: 20px 16px;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.drawer-header .user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 12px;
+  transition: background 0.2s;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.drawer-header .user-details {
+  flex: 1;
+}
+
+.drawer-header .user-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1d2129;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.drawer-header .user-account {
+  font-size: 14px;
+  color: #86909c;
+  line-height: 1.3;
+}
+
+.drawer-header .close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+  color: #86909c;
+  transition: all 0.2s;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.04);
+    color: #1d2129;
+  }
+}
+
+/* 抽屉菜单项 */
+.drawer-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+  }
+}
+
+.drawer-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  min-height: 56px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #1d2129;
+  position: relative;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .menu-label {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+  }
+}
+
+/* 抽屉底部 */
+.drawer-footer {
+  padding: 8px 0;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.drawer-footer .footer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  min-height: 56px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #1d2129;
+  font-size: 16px;
+  font-weight: 500;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &.danger {
+    color: #f56565;
+
+    &:active {
+      background: rgba(245, 101, 101, 0.08);
+    }
+  }
+}
+
+/* 抽屉菜单动画 */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 0.69, 0.1, 1);
+}
+
+.drawer-enter-from,
+.drawer-leave-to {
+  .mobile-drawer {
+    transform: translateX(-100%);
+  }
+
+  .mobile-drawer-overlay {
+    opacity: 0;
+  }
+}
+
+.drawer-enter-to,
+.drawer-leave-from {
+  .mobile-drawer {
+    transform: translateX(0);
+  }
+
+  .mobile-drawer-overlay {
+    opacity: 1;
+  }
+}
+
+/* 移动端响应式优化 */
+@media (max-width: 430px) {
+  .mobile-drawer {
+    width: 100%;
+    max-width: 320px;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+  }
+}
+
+/* PWA Standalone模式适配 */
+html.standalone-mode {
+  .mobile-drawer-overlay {
+    top: var(--safe-area-inset-top, 0px);
+    bottom: var(--safe-area-inset-bottom, 0px);
   }
 }
 </style>

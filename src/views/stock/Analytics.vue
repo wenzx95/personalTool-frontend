@@ -485,14 +485,252 @@ onMounted(() => {
   }
 }
 
+/* ============================================================
+   移动端优化 - 平板和手机
+   ============================================================ */
 @media (max-width: 768px) {
   /* 页面容器优化 */
   .analytics {
-    padding: 12px;
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* 页面头部优化 */
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  /* 汇总卡片优化 */
   .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    padding: 16px 12px;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-label {
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #86909c;
+    }
+
+    .card-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+  }
+
+  /* 图表网格优化 */
+  .charts-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* 图表卡片优化 */
+  .chart-card {
+    padding: 16px;
+    border-radius: 12px;
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    &.chart-card-wide {
+      grid-column: span 1;
+    }
+  }
+
+  /* 卡片头部优化 */
+  .card-header {
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* 卡片主体优化 - 调整图表高度 */
+  .card-body {
+    height: 260px;
+  }
+
+  /* Loading状态优化 */
+  :deep(.el-loading-mask) {
+    border-radius: 12px;
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 60px 20px;
+
+    .el-empty__description {
+      font-size: 15px !important;
+      margin: 16px 0;
+    }
+
+    .el-button {
+      width: 100%;
+      max-width: 200px;
+      height: 48px;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+  }
+
+  /* ECharts图表优化 - 移动端字体大小 */
+  .chart {
+    :deep(.echarts-tooltip) {
+      font-size: 13px !important;
+    }
+
+    /* X轴标签优化 */
+    :deep(.echarts-xaxis .echarts-axis-label) {
+      font-size: 11px !important;
+    }
+
+    /* Y轴标签优化 */
+    :deep(.echarts-yaxis .echarts-axis-label) {
+      font-size: 11px !important;
+    }
+
+    /* 图例优化 */
+    :deep(.echarts-legend) {
+      font-size: 12px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .analytics {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  /* 汇总卡片 - 保持2列但缩小尺寸 */
+  .summary-cards {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 14px 10px;
+    border-radius: 10px;
+
+    .card-label {
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .card-value {
+      font-size: 18px;
+    }
+  }
+
+  /* 图表卡片 */
+  .charts-grid {
+    gap: 12px;
+  }
+
+  .chart-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .card-header {
+    margin-bottom: 10px;
+  }
+
+  .card-title {
+    font-size: 15px;
+  }
+
+  /* 更小的图表高度 */
+  .card-body {
+    height: 220px;
+  }
+
+  /* 空状态 */
+  :deep(.el-empty) {
+    padding: 48px 16px;
+
+    .el-empty__description {
+      font-size: 14px !important;
+    }
+
+    .el-button {
+      height: 48px;
+      font-size: 15px;
+    }
+  }
+
+  /* ECharts图表进一步优化 */
+  .chart {
+    :deep(.echarts-tooltip) {
+      font-size: 12px !important;
+    }
+
+    :deep(.echarts-xaxis .echarts-axis-label) {
+      font-size: 10px !important;
+    }
+
+    :deep(.echarts-yaxis .echarts-axis-label) {
+      font-size: 10px !important;
+    }
+
+    :deep(.echarts-legend) {
+      font-size: 11px !important;
+    }
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .analytics {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
   }
 }
 </style>

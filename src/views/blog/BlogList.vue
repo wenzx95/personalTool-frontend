@@ -368,36 +368,349 @@ onMounted(() => {
 /* 响应式 */
 @media (max-width: 768px) {
   .blog-list-container {
-    padding: 20px 12px;
+    padding: 20px 16px;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+  }
+
+  /* 顶部Header优化 */
+  .blog-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    text-align: center;
   }
 
   .blog-title {
-    font-size: 36px;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.2;
   }
 
+  .blog-subtitle {
+    font-size: 15px;
+  }
+
+  /* 筛选栏优化 */
   .filter-bar {
     flex-direction: column;
     gap: 16px;
-    align-items: stretch;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   .filter-left {
     flex-direction: column;
+    gap: 12px;
+    width: 100%;
   }
 
+  /* 输入框和选择器优化 - 48px高度 */
   .search-input,
   .category-select {
     width: 100%;
+
+    :deep(.el-input__wrapper),
+    :deep(.el-select__wrapper) {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 12px;
+    }
+
+    :deep(.el-input__inner) {
+      height: 48px !important;
+      line-height: 48px !important;
+      font-size: 16px !important;
+    }
+  }
+
+  .filter-right {
+    width: 100%;
+
+    .sort-group {
+      width: 100%;
+      display: flex;
+
+      :deep(.el-radio-button) {
+        flex: 1;
+
+        .el-radio-button__inner {
+          width: 100%;
+          height: 44px;
+          padding: 0 12px;
+          font-size: 15px;
+          border-radius: 10px;
+        }
+      }
+
+      :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+        background-color: #3370ff;
+        border-color: #3370ff;
+        color: #fff;
+      }
+    }
+  }
+
+  /* 文章列表优化 */
+  .article-list {
+    min-height: 300px;
+  }
+
+  .article-item {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s;
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .article-main {
+    gap: 12px;
+  }
+
+  .article-tags {
+    gap: 8px;
+
+    :deep(.el-tag) {
+      font-size: 12px;
+      padding: 4px 10px;
+      height: auto;
+      border-radius: 6px;
+    }
   }
 
   .article-title {
     font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  .article-summary {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #4e5969;
+    -webkit-line-clamp: 3;
   }
 
   .article-footer {
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    padding-top: 12px;
     align-items: flex-start;
+  }
+
+  .author-info {
+    .author-name {
+      font-size: 14px;
+      color: #86909c;
+    }
+  }
+
+  .meta-info {
+    gap: 16px;
+    width: 100%;
+
+    .meta-item {
+      font-size: 13px;
+      color: #86909c;
+      gap: 4px;
+
+      .el-icon {
+        font-size: 15px;
+      }
+    }
+  }
+
+  .article-tags-bottom {
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+    .tag-item {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+  }
+
+  /* 分页优化 */
+  .pagination-wrapper {
+    margin-top: 32px;
+    padding: 24px 16px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    :deep(.el-pagination) {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+
+      .el-pagination__total,
+      .el-pagination__sizes,
+      .el-pagination__jump {
+        display: none;
+      }
+
+      .el-pager li {
+        min-width: 36px;
+        height: 36px;
+        line-height: 36px;
+        font-size: 14px;
+        border-radius: 8px;
+        margin: 0 2px;
+      }
+
+      button {
+        height: 36px;
+        min-width: 36px;
+        border-radius: 8px;
+      }
+
+      .el-pagination__next,
+      .el-pagination__prev {
+        display: none;
+      }
+    }
+  }
+
+  /* 空状态优化 */
+  :deep(.el-empty) {
+    padding: 60px 20px;
+
+    .el-empty__description {
+      font-size: 15px !important;
+    }
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .blog-list-container {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+
+  .blog-header {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+
+  .blog-title {
+    font-size: 26px;
+  }
+
+  .blog-subtitle {
+    font-size: 14px;
+  }
+
+  .filter-bar {
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    gap: 14px;
+  }
+
+  .filter-left {
+    gap: 10px;
+  }
+
+  .search-input,
+  .category-select {
+    :deep(.el-input__wrapper),
+    :deep(.el-select__wrapper) {
+      height: 48px !important;
+      font-size: 16px !important;
+      border-radius: 10px;
+    }
+  }
+
+  .article-item {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .article-title {
+    font-size: 17px;
+  }
+
+  .article-summary {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .article-footer {
+    padding-top: 10px;
+    gap: 10px;
+  }
+
+  .author-info .author-name {
+    font-size: 13px;
+  }
+
+  .meta-info {
+    gap: 14px;
+
+    .meta-item {
+      font-size: 12px;
+    }
+  }
+
+  .pagination-wrapper {
+    padding: 20px 12px;
+    border-radius: 12px;
+
+    :deep(.el-pagination) {
+      .el-pager li {
+        min-width: 32px;
+        height: 32px;
+        line-height: 32px;
+        font-size: 13px;
+        border-radius: 6px;
+      }
+
+      button {
+        height: 32px;
+        min-width: 32px;
+        border-radius: 6px;
+      }
+    }
+  }
+
+  :deep(.el-empty) {
+    padding: 48px 16px;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .blog-list-container {
+      padding-top: calc(24px + env(safe-area-inset-top, 0px));
+    }
+
+    .article-item {
+      transition: all 0.2s;
+
+      &:active {
+        transform: scale(0.98);
+      }
+    }
   }
 }
 </style>

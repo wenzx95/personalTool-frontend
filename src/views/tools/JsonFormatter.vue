@@ -1850,4 +1850,413 @@ defineExpose({
     }
   }
 }
+
+/* ============================================================
+   移动端优化（平板和手机）
+   ============================================================ */
+@media (max-width: 768px) {
+  .json-formatter {
+    padding: 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+  }
+
+  /* 工具栏优化 */
+  .toolbar {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .el-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .el-button {
+      height: 44px;
+      font-size: 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+
+      .el-icon {
+        font-size: 16px;
+      }
+    }
+  }
+
+  .toolbar-right {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .el-button {
+      height: 44px;
+      font-size: 15px;
+      border-radius: 10px;
+      flex: 1;
+      min-width: 0;
+
+      .el-icon {
+        font-size: 16px;
+      }
+    }
+  }
+
+  /* 主内容区优化 */
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &.left-collapsed {
+      grid-template-columns: 1fr;
+
+      .left-panel {
+        display: none;
+      }
+
+      .expand-button {
+        display: flex;
+      }
+    }
+  }
+
+  /* 案例面板移动端优化 */
+  .cases-panel {
+    min-width: 100%;
+    max-width: 100%;
+    max-height: 200px;
+  }
+
+  .panel-header {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .panel-title {
+    font-size: 14px;
+  }
+
+  .cases-source-switcher {
+    :deep(.el-button-group) {
+      .el-button {
+        height: 36px;
+        font-size: 13px;
+        padding: 0 10px;
+      }
+    }
+  }
+
+  /* 案例列表优化 */
+  .case-item {
+    padding: 10px 12px;
+    min-height: 48px;
+    border-radius: 8px;
+
+    &:active {
+      background: #f7f8fa;
+    }
+  }
+
+  .case-item-content {
+    gap: 8px;
+  }
+
+  .case-icon {
+    font-size: 16px;
+  }
+
+  .case-name {
+    font-size: 14px;
+  }
+
+  .case-item-actions {
+    .el-button {
+      width: 28px !important;
+      height: 28px !important;
+
+      .el-icon {
+        font-size: 12px !important;
+      }
+    }
+  }
+
+  /* 输入面板优化 */
+  .left-panel {
+    min-height: 300px;
+  }
+
+  .panel-body {
+    padding: 12px;
+  }
+
+  .input-body {
+    :deep(.el-textarea__inner) {
+      font-size: 15px !important;
+      line-height: 1.6;
+    }
+  }
+
+  /* 输出面板优化 */
+  .output-body {
+    border-radius: 8px;
+  }
+
+  .output-body pre {
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .tree-view {
+    padding: 8px;
+  }
+
+  /* 空状态优化 */
+  .empty-panel {
+    min-height: 200px;
+
+    .empty-placeholder {
+      padding: 40px 20px;
+      font-size: 14px;
+    }
+  }
+
+  /* 错误消息优化 */
+  .error-message {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    margin-top: 0;
+  }
+
+  /* 截断提示优化 */
+  .truncated-notice {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* 选项区域优化 */
+  .options-section {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .el-space {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px !important;
+
+    .option-label {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+  }
+
+  :deep(.el-radio-group) {
+    display: flex;
+    gap: 8px;
+
+    .el-radio-button__inner {
+      height: 36px;
+      font-size: 14px;
+      padding: 0 12px;
+      border-radius: 8px;
+    }
+  }
+
+  :deep(.el-checkbox) {
+    font-size: 14px;
+  }
+
+  /* 展开按钮优化 */
+  .expand-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    &:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .el-icon {
+      font-size: 18px;
+    }
+  }
+
+  /* 折叠按钮优化 */
+  .collapse-button {
+    padding: 6px !important;
+
+    .el-icon {
+      font-size: 16px;
+    }
+  }
+
+  /* 标签优化 */
+  :deep(.el-tag) {
+    font-size: 12px;
+    padding: 4px 10px;
+    height: auto;
+    border-radius: 6px;
+  }
+}
+
+/* ============================================================
+   小屏手机进一步优化
+   ============================================================ */
+@media (max-width: 430px) {
+  .json-formatter {
+    padding: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .toolbar {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .el-button-group {
+    gap: 6px;
+
+    .el-button {
+      height: 42px;
+      font-size: 14px;
+      border-radius: 8px;
+      padding: 0 8px;
+
+      .el-icon {
+        font-size: 15px;
+      }
+    }
+  }
+
+  .toolbar-right .el-button {
+    height: 42px;
+    font-size: 14px;
+    padding: 0 10px;
+  }
+
+  .panel-header {
+    padding: 10px 12px;
+  }
+
+  .panel-title {
+    font-size: 13px;
+  }
+
+  .cases-panel {
+    max-height: 180px;
+  }
+
+  .cases-source-switcher {
+    :deep(.el-button-group .el-button) {
+      height: 34px;
+      font-size: 12px;
+      padding: 0 8px;
+    }
+  }
+
+  .case-item {
+    padding: 8px 10px;
+    min-height: 44px;
+    border-radius: 6px;
+  }
+
+  .case-name {
+    font-size: 13px;
+  }
+
+  .case-item-actions .el-button {
+    width: 26px !important;
+    height: 26px !important;
+
+    .el-icon {
+      font-size: 11px !important;
+    }
+  }
+
+  .left-panel {
+    min-height: 250px;
+  }
+
+  .input-body :deep(.el-textarea__inner) {
+    font-size: 14px !important;
+  }
+
+  .output-body pre {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .empty-panel .empty-placeholder {
+    padding: 32px 16px;
+    font-size: 13px;
+
+    .el-icon {
+      font-size: 40px;
+    }
+  }
+
+  .options-section {
+    padding: 10px;
+    border-radius: 10px;
+
+    .option-label {
+      font-size: 13px;
+    }
+  }
+
+  :deep(.el-radio-group .el-radio-button__inner) {
+    height: 34px;
+    font-size: 13px;
+    padding: 0 10px;
+    border-radius: 6px;
+  }
+
+  :deep(.el-checkbox) {
+    font-size: 13px;
+  }
+
+  :deep(.el-tag) {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}
+
+/* ============================================================
+   PWA Standalone模式特殊优化
+   ============================================================ */
+html.standalone-mode {
+  @media (max-width: 768px) {
+    .json-formatter {
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    }
+  }
+
+  @media (max-width: 430px) {
+    .json-formatter {
+      padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    }
+  }
+}
 </style>
