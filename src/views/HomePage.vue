@@ -108,8 +108,6 @@ const navigateTo = (path: string) => {
 <style scoped lang="scss">
 .home-page {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -165,7 +163,6 @@ const navigateTo = (path: string) => {
 
 /* ========== 功能模块卡片 ========== */
 .features-section {
-  flex: 1;
   padding: 40px 20px;
 }
 
