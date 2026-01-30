@@ -9,7 +9,7 @@
         </div>
 
         <!-- 桌面端：Logo -->
-        <div v-else class="navbar-logo" @click="router.push('/tools/json-formatter')">
+        <div v-else class="navbar-logo" @click="router.push('/')">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon">
             <rect width="24" height="24" rx="6" fill="#3370ff"/>
             <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
