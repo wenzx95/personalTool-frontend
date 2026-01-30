@@ -11,13 +11,18 @@
 /* Global styles */
 #app {
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html, body {
+  height: auto;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 </style>
