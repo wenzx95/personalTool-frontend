@@ -221,11 +221,6 @@
       </el-main>
     </el-container>
 
-    <!-- 备案号底部显示（仅桌面端显示） -->
-    <footer v-show="!isMobile" class="icp-footer">
-      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">浙ICP备2026004908号</a>
-    </footer>
-
     <!-- 关于对话框 -->
     <el-dialog
       v-model="aboutDialogVisible"
@@ -1607,35 +1602,6 @@ const handleUserAction = async (command: string) => {
         color: #c9cdd4;
       }
     }
-  }
-}
-
-/* 备案号底部 */
-.icp-footer {
-  background: #f5f7fa;
-  border-top: 1px solid #e4e7ed;
-  padding: 16px 0;
-  text-align: center;
-  font-size: 13px;
-  color: #86909c;
-  flex-shrink: 0;
-
-  a {
-    color: #86909c;
-    text-decoration: none;
-    transition: color 0.2s;
-
-    &:hover {
-      color: #3370ff;
-    }
-  }
-}
-
-/* 移动端优化 */
-@media (max-width: 768px) {
-  .icp-footer {
-    padding: 12px 0;
-    font-size: 12px;
   }
 }
 

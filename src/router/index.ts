@@ -12,7 +12,9 @@ const router = createRouter({
     },
     {
       path: '/',
-      redirect: '/tools/json-formatter'
+      name: 'Home',
+      component: () => import('@/views/HomePage.vue'),
+      meta: { requiresAuth: false, hideFromMenu: true }
     },
     {
       path: '/',
@@ -329,8 +331,8 @@ router.beforeEach((to, _from, next) => {
   // Login page handling
   if (to.path === '/login') {
     if (isLoggedIn) {
-      console.log('[Router Guard] Already logged in, redirecting to tools')
-      next('/tools/json-formatter')
+      console.log('[Router Guard] Already logged in, redirecting to home')
+      next('/')
       return
     }
     console.log('[Router Guard] Login page - allowing access')
