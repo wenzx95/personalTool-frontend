@@ -546,38 +546,6 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
-// JSON工具导航栏状态
-const jsonToolActiveTab = ref('formatter')
-
-// 事件emit函数
-const emit = defineEmits<{
-  showExamples: []
-  clearAll: []
-}>()
-
-// JSON工具组件ref
-let jsonToolsRef: any = null
-
-const setJsonToolsRef = (el: any) => {
-  if (el) {
-    if (el.showExamples && el.clearAll) {
-      jsonToolsRef = el
-    }
-  }
-}
-
-const handleShowExamples = () => {
-  if (jsonToolsRef && typeof jsonToolsRef.showExamples === 'function') {
-    jsonToolsRef.showExamples()
-  }
-}
-
-const handleClearAll = () => {
-  if (jsonToolsRef && typeof jsonToolsRef.clearAll === 'function') {
-    jsonToolsRef.clearAll()
-  }
-}
-
 // 版本信息
 const frontendVersion = ref(`${APP_VERSION.buildDate} ${APP_VERSION.buildTimeShort}`)
 const backendVersion = ref('')

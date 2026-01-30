@@ -1,5 +1,21 @@
 <template>
   <div class="json-tools-page">
+    <!-- 标签切换器 -->
+    <div class="tab-switcher">
+      <button
+        :class="['tab-button', { active: activeTab === 'formatter' }]"
+        @click="switchTab('formatter')"
+      >
+        格式化工具
+      </button>
+      <button
+        :class="['tab-button', { active: activeTab === 'comparator' }]"
+        @click="switchTab('comparator')"
+      >
+        JSON比对
+      </button>
+    </div>
+
     <!-- 内容区 -->
     <div class="tools-content">
       <!-- 格式化工具 -->
@@ -41,6 +57,11 @@ watch(() => props.activeTab, (newTab) => {
     activeTab.value = newTab
   }
 })
+
+// 切换标签页
+const switchTab = (tab: 'formatter' | 'comparator') => {
+  activeTab.value = tab
+}
 
 // 显示示例数据
 const showExamples = () => {
@@ -84,6 +105,41 @@ defineExpose({
   overflow: hidden;
 }
 
+// ========== 标签切换器 ==========
+.tab-switcher {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.tab-button {
+  flex: 1;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #606266;
+  background-color: #f5f7fa;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #409eff;
+    background-color: #ecf5ff;
+    border-color: #c6e2ff;
+  }
+
+  &.active {
+    color: #ffffff;
+    background-color: #409eff;
+    border-color: #409eff;
+  }
+}
+
 // ========== 内容区 ==========
 .tools-content {
   flex: 1;
@@ -93,6 +149,17 @@ defineExpose({
 
 // ========== 响应式 ==========
 @media (max-width: 768px) {
+  .tab-switcher {
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .tab-button {
+    height: 44px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
   .tools-content {
     padding: 16px 12px;
     padding-top: calc(16px + env(safe-area-inset-top, 0px));
@@ -157,6 +224,10 @@ defineExpose({
    ============================================================ */
 html.standalone-mode {
   @media (max-width: 768px) {
+    .tab-switcher {
+      padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    }
+
     .tools-content {
       padding-top: calc(20px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
