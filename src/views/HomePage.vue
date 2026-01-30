@@ -1,77 +1,45 @@
 <template>
   <div class="home-page">
-    <!-- 顶部欢迎区 -->
-    <header class="hero-section">
-      <div class="hero-content">
-        <div class="hero-logo">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" rx="6" fill="#3370ff"/>
-            <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="18" cy="16" r="3" fill="white"/>
-          </svg>
-        </div>
-        <h1 class="hero-title">工具集</h1>
-        <p class="hero-subtitle">高效、便捷的工具集合</p>
-        <p class="hero-description">
-          包含 A股复盘、记账系统、博客等功能，助您更好地管理生活和投资
-        </p>
-      </div>
-    </header>
-
     <!-- 功能模块卡片 -->
     <main class="features-section">
       <div class="features-container">
-        <!-- 工具集 -->
+        <!-- JSON 格式化 -->
         <div class="feature-card" @click="navigateTo('/tools/json-formatter')">
           <div class="card-icon tools">
             <el-icon :size="32"><Tools /></el-icon>
           </div>
-          <h3 class="card-title">工具集</h3>
-          <p class="card-description">JSON 格式化、JSON 比对、还贷计算器等实用工具</p>
+          <h3 class="card-title">JSON 格式化</h3>
+          <p class="card-description">JSON 格式化、压缩、验证和语法高亮显示</p>
           <div class="card-links">
-            <span class="link-item">JSON 格式化</span>
-            <span class="link-item">JSON 比对</span>
-            <span class="link-item">还贷计算</span>
+            <span class="link-item">格式化</span>
+            <span class="link-item">压缩</span>
+            <span class="link-item">验证</span>
           </div>
         </div>
 
-        <!-- A股复盘 -->
-        <div class="feature-card" @click="navigateTo('/stock/overview')">
-          <div class="card-icon stock">
-            <el-icon :size="32"><TrendCharts /></el-icon>
+        <!-- JSON 比对 -->
+        <div class="feature-card" @click="navigateTo('/tools/json-comparator')">
+          <div class="card-icon compare">
+            <el-icon :size="32"><DataAnalysis /></el-icon>
           </div>
-          <h3 class="card-title">A股复盘</h3>
-          <p class="card-description">市场数据采集、复盘记录、统计分析，全面跟踪市场动态</p>
+          <h3 class="card-title">JSON 比对</h3>
+          <p class="card-description">比对两个 JSON 数据的差异，高亮显示不同之处</p>
           <div class="card-links">
-            <span class="link-item">市场概览</span>
-            <span class="link-item">复盘记录</span>
-            <span class="link-item">统计分析</span>
+            <span class="link-item">差异比对</span>
+            <span class="link-item">高亮显示</span>
           </div>
         </div>
 
-        <!-- 记账系统 -->
-        <div class="feature-card" @click="navigateTo('/accounting')">
-          <div class="card-icon accounting">
-            <el-icon :size="32"><Money /></el-icon>
+        <!-- 还贷计算器 -->
+        <div class="feature-card" @click="navigateTo('/tools/loan-calculator')">
+          <div class="card-icon calculator">
+            <el-icon :size="32"><Management /></el-icon>
           </div>
-          <h3 class="card-title">记账系统</h3>
-          <p class="card-description">简单易用的个人记账工具，帮助您管理收支</p>
+          <h3 class="card-title">还贷计算器</h3>
+          <p class="card-description">提前还贷计算，帮助您规划还款方案</p>
           <div class="card-links">
-            <span class="link-item">收支记录</span>
-            <span class="link-item">统计分析</span>
-          </div>
-        </div>
-
-        <!-- 博客 -->
-        <div class="feature-card" @click="navigateTo('/blog/list')">
-          <div class="card-icon blog">
-            <el-icon :size="32"><DocumentCopy /></el-icon>
-          </div>
-          <h3 class="card-title">博客</h3>
-          <p class="card-description">记录学习笔记、生活感悟，分享知识与经验</p>
-          <div class="card-links">
-            <span class="link-item">博客列表</span>
-            <span class="link-item">知识库</span>
+            <span class="link-item">等额本息</span>
+            <span class="link-item">等额本金</span>
           </div>
         </div>
       </div>
@@ -96,7 +64,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Tools, TrendCharts, Money, DocumentCopy } from '@element-plus/icons-vue'
+import { Tools, DataAnalysis, Management } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -109,65 +77,18 @@ const navigateTo = (path: string) => {
 .home-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* ========== 顶部欢迎区 ========== */
-.hero-section {
-  padding: 80px 20px 60px;
-  text-align: center;
-  color: #ffffff;
-
-  .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .hero-logo {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    width: 80px;
-    height: 80px;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-
-    svg {
-      width: 48px;
-      height: 48px;
-    }
-  }
-
-  .hero-title {
-    font-size: 48px;
-    font-weight: 700;
-    margin: 0 0 16px;
-    letter-spacing: -1px;
-  }
-
-  .hero-subtitle {
-    font-size: 24px;
-    font-weight: 500;
-    margin: 0 0 16px;
-    opacity: 0.95;
-  }
-
-  .hero-description {
-    font-size: 16px;
-    margin: 0;
-    opacity: 0.85;
-    line-height: 1.6;
-  }
+  display: flex;
+  flex-direction: column;
 }
 
 /* ========== 功能模块卡片 ========== */
 .features-section {
-  padding: 40px 20px;
+  flex: 1;
+  padding: 60px 20px 40px;
 }
 
 .features-container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -206,16 +127,12 @@ const navigateTo = (path: string) => {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
 
-  &.stock {
+  &.compare {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   }
 
-  &.accounting {
+  &.calculator {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  }
-
-  &.blog {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
   }
 }
 
@@ -289,35 +206,8 @@ const navigateTo = (path: string) => {
 
 /* ========== 响应式设计 ========== */
 @media (max-width: 768px) {
-  .hero-section {
-    padding: 60px 20px 40px;
-
-    .hero-logo {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 20px;
-
-      svg {
-        width: 40px;
-        height: 40px;
-      }
-    }
-
-    .hero-title {
-      font-size: 36px;
-    }
-
-    .hero-subtitle {
-      font-size: 20px;
-    }
-
-    .hero-description {
-      font-size: 15px;
-    }
-  }
-
   .features-section {
-    padding: 24px 16px;
+    padding: 40px 16px 24px;
   }
 
   .features-container {
@@ -361,18 +251,6 @@ const navigateTo = (path: string) => {
 }
 
 @media (max-width: 430px) {
-  .hero-section {
-    padding: 48px 16px 32px;
-
-    .hero-title {
-      font-size: 32px;
-    }
-
-    .hero-subtitle {
-      font-size: 18px;
-    }
-  }
-
   .feature-card {
     padding: 20px;
   }
@@ -381,12 +259,12 @@ const navigateTo = (path: string) => {
 /* ========== PWA Standalone 模式 ========== */
 html.standalone-mode {
   .home-page {
-    min-height: 100dvh; /* 使用动态视口高度 */
+    min-height: 100dvh;
   }
 
   @media (max-width: 768px) {
-    .hero-section {
-      padding-top: calc(60px + env(safe-area-inset-top));
+    .features-section {
+      padding-top: calc(40px + env(safe-area-inset-top));
     }
 
     .home-footer {
