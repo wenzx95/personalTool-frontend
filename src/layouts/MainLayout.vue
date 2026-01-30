@@ -832,11 +832,13 @@ const transformChildren = (children: any[]): MenuItem[] => {
 }
 
 // 在用户登录后加载动态菜单
-watch(() => userStore.isLoggedIn, (isLoggedIn) => {
-  if (isLoggedIn) {
-    fetchDynamicMenus()
-  }
-}, { immediate: true })
+// 暂时禁用：后端菜单数据未更新，使用前端静态菜单
+// TODO: 后续更新后端数据库菜单后重新启用
+// watch(() => userStore.isLoggedIn, (isLoggedIn) => {
+//   if (isLoggedIn) {
+//     fetchDynamicMenus()
+//   }
+// }, { immediate: true })
 
 // 根据登录状态和设备类型过滤菜单
 const filteredMenuSections = computed(() => {
