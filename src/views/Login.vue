@@ -65,7 +65,7 @@
       </el-form>
 
       <div class="login-footer">
-        <el-text size="small" type="info">个人工具集 · 效率提升平台</el-text>
+        <el-text size="small" type="info">工具集 · 效率提升平台</el-text>
       </div>
     </el-card>
   </div>

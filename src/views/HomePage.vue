@@ -10,8 +10,8 @@
             <circle cx="18" cy="16" r="3" fill="white"/>
           </svg>
         </div>
-        <h1 class="hero-title">个人工具集</h1>
-        <p class="hero-subtitle">高效、便捷的个人工具集合</p>
+        <h1 class="hero-title">工具集</h1>
+        <p class="hero-subtitle">高效、便捷的工具集合</p>
         <p class="hero-description">
           包含 A股复盘、记账系统、博客等功能，助您更好地管理生活和投资
         </p>
@@ -80,7 +80,7 @@
     <!-- 底部信息 -->
     <footer class="home-footer">
       <div class="footer-content">
-        <p class="footer-text">© 2026 个人工具集. All rights reserved.</p>
+        <p class="footer-text">© 2026 工具集. All rights reserved.</p>
         <a
           href="https://beian.miit.gov.cn/"
           target="_blank"

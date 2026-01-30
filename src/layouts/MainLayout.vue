@@ -15,7 +15,7 @@
             <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
             <circle cx="18" cy="16" r="3" fill="white"/>
           </svg>
-          <span v-show="!isMobile" class="logo-text">个人工具集</span>
+          <span v-show="!isMobile" class="logo-text">工具集</span>
         </div>
 
         <!-- 桌面端：分隔线 -->
@@ -231,8 +231,8 @@
       <div class="about-content">
         <div class="about-header">
           <el-icon :size="48" color="#3370ff"><InfoFilled /></el-icon>
-          <h2>个人工具集</h2>
-          <p class="about-description">A股复盘、记账系统、博客等个人工具集</p>
+          <h2>工具集</h2>
+          <p class="about-description">A股复盘、记账系统、博客等工具集</p>
         </div>
 
         <el-divider />
@@ -251,7 +251,7 @@
         <el-divider />
 
         <div class="copyright-info">
-          <p class="copyright-text">© {{ currentYear }} 个人工具集. All rights reserved.</p>
+          <p class="copyright-text">© {{ currentYear }} 工具集. All rights reserved.</p>
           <p class="icp-info">
             <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">浙ICP备2026004908号</a>
           </p>

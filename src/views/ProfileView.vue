@@ -4,7 +4,7 @@
     <div v-if="!userStore.isLoggedIn" class="not-logged-in">
       <div class="login-prompt">
         <el-icon :size="80" color="#c9cdd4"><User /></el-icon>
-        <h2>欢迎来到个人工具集</h2>
+        <h2>欢迎来到工具集</h2>
         <p>登录后可使用更多功能</p>
         <el-button type="primary" size="large" @click="goToLogin">
           立即登录
@@ -86,8 +86,8 @@
       <div class="about-content">
         <div class="about-header">
           <el-icon :size="48" color="#3370ff"><InfoFilled /></el-icon>
-          <h2>个人工具集</h2>
-          <p class="about-description">A股复盘、记账系统、博客等个人工具集</p>
+          <h2>工具集</h2>
+          <p class="about-description">A股复盘、记账系统、博客等工具集</p>
         </div>
 
         <el-divider />
@@ -106,7 +106,7 @@
         <el-divider />
 
         <div class="copyright-info">
-          <p class="copyright-text">© {{ currentYear }} 个人工具集. All rights reserved.</p>
+          <p class="copyright-text">© {{ currentYear }} 工具集. All rights reserved.</p>
           <p class="icp-info">
             <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">浙ICP备2026004908号</a>
           </p>
