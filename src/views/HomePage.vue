@@ -29,19 +29,6 @@
             <span class="link-item">高亮显示</span>
           </div>
         </div>
-
-        <!-- 还贷计算器 -->
-        <div class="feature-card" @click="navigateTo('/tools/loan-calculator')">
-          <div class="card-icon calculator">
-            <el-icon :size="32"><Management /></el-icon>
-          </div>
-          <h3 class="card-title">还贷计算器</h3>
-          <p class="card-description">提前还贷计算，帮助您规划还款方案</p>
-          <div class="card-links">
-            <span class="link-item">等额本息</span>
-            <span class="link-item">等额本金</span>
-          </div>
-        </div>
       </div>
     </main>
 
@@ -64,7 +51,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Tools, DataAnalysis, Management } from '@element-plus/icons-vue'
+import { Tools, DataAnalysis } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -88,7 +75,7 @@ const navigateTo = (path: string) => {
 }
 
 .features-container {
-  max-width: 900px;
+  max-width: 600px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -129,10 +116,6 @@ const navigateTo = (path: string) => {
 
   &.compare {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  }
-
-  &.calculator {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   }
 }
 
