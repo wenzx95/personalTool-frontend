@@ -9,7 +9,7 @@
         </div>
 
         <!-- 桌面端：Logo -->
-        <div v-else class="navbar-logo" @click="router.push('/tools/json')">
+        <div v-else class="navbar-logo" @click="router.push('/tools/json-formatter')">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon">
             <rect width="24" height="24" rx="6" fill="#3370ff"/>
             <path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -402,7 +402,7 @@ const mobileDrawerOpen = ref(false)
 // 抽屉菜单项配置
 const drawerMenuItems = computed(() => {
   const items = [
-    { key: 'tools/json', label: '工具', icon: markRaw(Tools) },
+    { key: 'tools/json-formatter', label: '工具', icon: markRaw(Tools) },
     { key: 'blog/list', label: '博客', icon: markRaw(DocumentCopy) },
     { key: 'knowledge/list', label: '知识库', icon: markRaw(Notebook) }
   ]
@@ -504,7 +504,8 @@ const mobileTabs = computed(() => {
   // 工具模块：显示子功能 + 返回
   if (currentPath.startsWith('/tools')) {
     const tabs = [
-      { key: 'tools/json', label: 'JSON工具', icon: markRaw(Document) }
+      { key: 'tools/json-formatter', label: '格式化', icon: markRaw(Document) },
+      { key: 'tools/json-comparator', label: '比对', icon: markRaw(DataAnalysis) }
     ]
 
     // 还贷计算器只在网页端显示
@@ -523,7 +524,7 @@ const mobileTabs = computed(() => {
 
   // 默认：主Tab
   const tabs = [
-    { key: 'tools/json', label: '工具', icon: markRaw(Tools) }
+    { key: 'tools/json-formatter', label: '工具', icon: markRaw(Tools) }
   ]
 
   if (userStore.isLoggedIn) {
@@ -652,7 +653,8 @@ const menuSections = ref<MenuSection[]>([
         icon: markRaw(Tools),
         deviceType: 'all',
         children: [
-          { key: 'tools/json', label: 'JSON工具', icon: markRaw(Document), deviceType: 'all' },
+          { key: 'tools/json-formatter', label: 'JSON格式化', icon: markRaw(Document), deviceType: 'all' },
+          { key: 'tools/json-comparator', label: 'JSON比对', icon: markRaw(DataAnalysis), deviceType: 'all' },
           { key: 'tools/loan-calculator', label: '还贷计算器', icon: markRaw(Management), deviceType: 'web' }
         ]
       }
@@ -730,7 +732,8 @@ const getMenuIcon = (key: string): any => {
     // 工具集
     'tools': Tools,
     'tools/loan-calculator': Management,
-    'tools/json': Document,
+    'tools/json-formatter': Document,
+    'tools/json-comparator': DataAnalysis,
 
     // 博客
     'blog': DocumentCopy,
@@ -902,7 +905,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
   return matched.map(item => ({
     path: item.path,
     title: item.meta.title as string
-  })).filter(item => !(route.path.startsWith('/tools/json') && item.title === 'JSON工具'))
+  })).filter(item => !(route.path.startsWith('/tools/json') && item.title === 'JSON格式化'))
 })
 
 const isActive = (key: string) => {
@@ -953,7 +956,7 @@ const handleNavClick = (key: string) => {
 
     // 判断当前是否在某个模块的入口页面
     // 如果是模块入口，则显示主导航
-    const mainPaths = ['/tools/json', '/stock/overview', '/accounting', '/blog/list', '/knowledge/list']
+    const mainPaths = ['/tools/json-formatter', '/stock/overview', '/accounting', '/blog/list', '/knowledge/list']
 
     if (mainPaths.includes(currentPath)) {
       // 已经在模块入口页面，需要显示主导航
@@ -977,8 +980,8 @@ const handleNavClick = (key: string) => {
       router.push('/knowledge/list')
     }
     // 工具模块
-    else if (currentPath.startsWith('/tools') && currentPath !== '/tools/json') {
-      router.push('/tools/json')
+    else if (currentPath.startsWith('/tools') && currentPath !== '/tools/json-formatter') {
+      router.push('/tools/json-formatter')
     }
     // 记账模块
     else if (currentPath === '/accounting') {

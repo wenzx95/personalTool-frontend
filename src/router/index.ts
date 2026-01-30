@@ -12,7 +12,7 @@ const router = createRouter({
     },
     {
       path: '/',
-      redirect: '/tools/json'
+      redirect: '/tools/json-formatter'
     },
     {
       path: '/',
@@ -84,16 +84,17 @@ const router = createRouter({
           component: () => import('@/views/tools/JsonTools.vue'),
           meta: { title: 'JSON工具', requiresAuth: false }
         },
-        // 旧路由重定向（向后兼容）
         {
           path: 'tools/json-formatter',
           name: 'JsonFormatter',
-          redirect: '/tools/json'
+          component: () => import('@/views/tools/JsonFormatter.vue'),
+          meta: { title: 'JSON格式化', requiresAuth: false }
         },
         {
           path: 'tools/json-comparator',
           name: 'JsonComparator',
-          redirect: '/tools/json'
+          component: () => import('@/views/tools/JsonComparator.vue'),
+          meta: { title: 'JSON比对', requiresAuth: false }
         },
         {
           path: 'admin',
@@ -329,7 +330,7 @@ router.beforeEach((to, _from, next) => {
   if (to.path === '/login') {
     if (isLoggedIn) {
       console.log('[Router Guard] Already logged in, redirecting to tools')
-      next('/tools/json')
+      next('/tools/json-formatter')
       return
     }
     console.log('[Router Guard] Login page - allowing access')
