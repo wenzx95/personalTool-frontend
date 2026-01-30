@@ -83,8 +83,7 @@ const router = createRouter({
         {
           path: 'tools/json',
           name: 'JsonTools',
-          component: () => import('@/views/tools/JsonTools.vue'),
-          meta: { title: 'JSON工具', requiresAuth: false }
+          redirect: '/tools/json-formatter'
         },
         {
           path: 'tools/json-formatter',
@@ -299,6 +298,13 @@ router.beforeEach((to, _from, next) => {
   const isLoggedIn = userStore.isLoggedIn
 
   console.log('[Router Guard] Path:', to.path, 'Logged in:', isLoggedIn)
+
+  // Home page is always accessible (no login required)
+  if (to.path === '/' || to.name === 'Home') {
+    console.log('[Router Guard] Home page - allowing access')
+    next()
+    return
+  }
 
   // Tools pages are always accessible (no login required)
   if (to.path.startsWith('/tools')) {
